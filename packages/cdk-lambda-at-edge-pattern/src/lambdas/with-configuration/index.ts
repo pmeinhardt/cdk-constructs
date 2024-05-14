@@ -1,3 +1,4 @@
+import { GetFunctionCommand, LambdaClient, UpdateFunctionCodeCommand } from '@aws-sdk/client-lambda';
 import { mkdtempSync, writeFileSync } from 'fs';
 import { resolve } from 'path';
 import Zip from 'adm-zip';
@@ -6,7 +7,6 @@ import type {
   CloudFormationCustomResourceUpdateEvent,
   CloudFormationCustomResourceEventCommon,
 } from 'aws-lambda';
-import { Lambda } from 'aws-sdk';
 import axios from 'axios';
 import { camelizeKeys, customResourceHelper, OnCreateHandler, OnUpdateHandler, ResourceHandler, ResourceHandlerReturn } from 'custom-resource-helper';
 
@@ -23,15 +23,13 @@ const updateLambdaCode = async (
     event.ResourceProperties,
   );
 
-  const lambda = new Lambda({
+  const lambda = new LambdaClient({
     region,
   });
 
-  const { Code: code } = await lambda
-    .getFunction({
-      FunctionName: functionName,
-    })
-    .promise();
+  const { Code: code } = await lambda.send(new GetFunctionCommand({
+    FunctionName: functionName,
+  }));
 
   if (!code?.Location) {
     throw new Error(`The code of the lambda function ${functionName} could not be downloaded.`);
@@ -57,13 +55,11 @@ const updateLambdaCode = async (
     CodeSha256: codeSha256,
     Version: version,
     FunctionArn: functionArn,
-  } = await lambda
-    .updateFunctionCode({
-      FunctionName: functionName,
-      ZipFile: newLambdaZip.toBuffer(),
-      Publish: true,
-    })
-    .promise();
+  } = await lambda.send(new UpdateFunctionCodeCommand({
+    FunctionName: functionName,
+    ZipFile: newLambdaZip.toBuffer(),
+    Publish: true,
+  }));
 
   return {
     physicalResourceId: functionName,

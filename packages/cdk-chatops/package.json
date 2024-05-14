@@ -65,11 +65,14 @@
   },
   "devDependencies": {
     "@aws-cdk/assert": "2.28.0",
+    "@aws-sdk/client-iam": "^3.567.0",
     "aws-cdk-lib": "^2.28.0",
-    "aws-sdk": "^2.1096.0",
     "axios": "^0.25.0",
     "constructs": "10.0.41",
     "jest-cdk-snapshot": "^2.0.1"
   },
+  "externals": [
+    "@aws-sdk/client-iam"
+  ],
   "gitHead": "b1ac0776c6169c1ca4a1434cad09d99c0ecb41ab"
 }

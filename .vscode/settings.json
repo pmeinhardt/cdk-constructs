@@ -3,5 +3,6 @@
   "editor.codeActionsOnSave": {
     "source.fixAll.eslint": "explicit"
   },
-  "explorer.autoReveal": false
+  "explorer.autoReveal": false,
+  "prettier.useEditorConfig": true
 }

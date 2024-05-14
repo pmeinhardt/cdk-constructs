@@ -1,5 +1,7 @@
+import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
+import { GetObjectCommand, S3Client } from '@aws-sdk/client-s3';
+import { BatchWriteCommand, DynamoDBDocumentClient } from '@aws-sdk/lib-dynamodb';
 import type { CloudFormationCustomResourceEvent } from 'aws-lambda';
-import { DynamoDB, S3 } from 'aws-sdk';
 import { customResourceHelper, OnCreateHandler, ResourceHandler, ResourceHandlerReturn } from 'custom-resource-helper';
 import chunk from 'lodash.chunk';
 
@@ -19,8 +21,8 @@ interface DynamoDBSeederProps {
 
 type Seeds = Record<string, unknown>[];
 
-const dynamodb = new DynamoDB.DocumentClient();
-const s3 = new S3();
+const dynamodb = DynamoDBDocumentClient.from(new DynamoDBClient());
+const s3 = new S3Client();
 
 const getProperties = (props: CloudFormationCustomResourceEvent['ResourceProperties']): DynamoDBSeederProps => ({
   tableName: props.TableName,
@@ -55,13 +57,11 @@ const getSeedsFromS3 = async (s3Location: { s3Bucket?: string; s3Key?: string; s
     throw new Error('Bucket configuration missing!');
   }
 
-  const { Body: body } = await s3
-    .getObject({
-      Bucket: s3Bucket,
-      Key: s3Key,
-      VersionId: s3ObjectVersion,
-    })
-    .promise();
+  const { Body: body } = await s3.send(new GetObjectCommand({
+    Bucket: s3Bucket,
+    Key: s3Key,
+    VersionId: s3ObjectVersion,
+  }));
 
   if (!body) {
     throw new Error(`Cannot load seeds from bucket ${s3Bucket} with key ${s3Key}`);
@@ -83,13 +83,11 @@ const writeSeeds = async (tableName: string, seeds: Seeds): Promise<void> => {
         },
       }));
 
-      return dynamodb
-        .batchWrite({
-          RequestItems: {
-            [tableName]: requests,
-          },
-        })
-        .promise();
+      return dynamodb.send(new BatchWriteCommand({
+        RequestItems: {
+          [tableName]: requests,
+        },
+      }));
     }),
   );
 };

@@ -1,20 +1,20 @@
+import { CognitoIdentityProvider, DescribeUserPoolCommand } from '@aws-sdk/client-cognito-identity-provider';
 import type {
   CloudFormationCustomResourceHandler,
   CloudFormationCustomResourceResponse,
   CloudFormationCustomResourceDeleteEvent,
   CloudFormationCustomResourceUpdateEvent,
 } from 'aws-lambda';
-import { CognitoIdentityServiceProvider } from 'aws-sdk';
 import axios from 'axios';
 
-const COGNITO_CLIENT = new CognitoIdentityServiceProvider({
+const COGNITO_CLIENT = new CognitoIdentityProvider({
   region: process.env.AWS_REGION || process.env.AWS_DEFAULT_REGION,
 });
 
 async function ensureCognitoUserPoolDomain(userPoolId: string): Promise<string> {
-  const { UserPool: userPool } = await COGNITO_CLIENT.describeUserPool({
+  const { UserPool: userPool } = await COGNITO_CLIENT.send(new DescribeUserPoolCommand({
     UserPoolId: userPoolId,
-  }).promise();
+  }));
 
   if (!userPool) {
     throw new Error(`User pool ${userPoolId} not found.`);

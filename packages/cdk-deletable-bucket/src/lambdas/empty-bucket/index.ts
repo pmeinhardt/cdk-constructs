@@ -1,24 +1,22 @@
+import { DeleteObjectsCommand, ListObjectVersionsCommand, ObjectIdentifier,  S3Client } from '@aws-sdk/client-s3';
 import type { CloudFormationCustomResourceEvent, CloudFormationCustomResourceDeleteEvent } from 'aws-lambda';
-import { S3 } from 'aws-sdk';
 
 export interface EcsTaskDefinitionProps {
   bucketName: string;
 }
 
-const s3 = new S3();
+const s3 = new S3Client();
 
 const getProperties = (props: CloudFormationCustomResourceDeleteEvent['ResourceProperties']): EcsTaskDefinitionProps => ({
   bucketName: props.BucketName,
 });
 
 const emptyBucket = async (bucketName: string): Promise<void> => {
-  const listedObjects = await s3
-    .listObjectVersions({
-      Bucket: bucketName,
-    })
-    .promise();
+  const listedObjects = await s3.send(new ListObjectVersionsCommand({
+    Bucket: bucketName,
+  }));
 
-  const deletableObjects = new Array<S3.ObjectIdentifier>();
+  const deletableObjects = new Array<ObjectIdentifier>();
 
   listedObjects.Versions?.forEach((version) => {
     deletableObjects.push({
@@ -36,12 +34,10 @@ const emptyBucket = async (bucketName: string): Promise<void> => {
 
   if (deletableObjects.length === 0) return;
 
-  await s3
-    .deleteObjects({
-      Bucket: bucketName,
-      Delete: { Objects: deletableObjects },
-    })
-    .promise();
+  await s3.send(new DeleteObjectsCommand({
+    Bucket: bucketName,
+    Delete: { Objects: deletableObjects },
+  }));
 
   if (listedObjects.IsTruncated) await emptyBucket(bucketName);
 };

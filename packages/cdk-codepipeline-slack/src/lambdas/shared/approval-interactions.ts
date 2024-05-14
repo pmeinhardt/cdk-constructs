@@ -1,5 +1,5 @@
+import { CodePipelineClient, PutApprovalResultCommand } from '@aws-sdk/client-codepipeline';
 import { AttachmentAction, Dialog } from '@slack/web-api';
-import { CodePipeline } from 'aws-sdk';
 import { getEnv } from 'get-env-or-die';
 
 import { ApprovalMessageBuilder, Approval } from './approval-message-builder';
@@ -23,7 +23,7 @@ interface ApprovalDialogState {
   approval: Approval;
 }
 
-const pipeline = new CodePipeline();
+const pipeline = new CodePipelineClient();
 
 const bot = new SlackBot({
   token: getEnv('SLACK_BOT_TOKEN'),
@@ -96,18 +96,16 @@ const handleDialogSubmission = async (payload: DialogPayload): Promise<void> => 
   const { ts, approval } = JSON.parse(state) as ApprovalDialogState;
   const { token, pipelineName, stageName, actionName } = approval;
 
-  await pipeline
-    .putApprovalResult({
-      token,
-      pipelineName,
-      stageName,
-      actionName,
-      result: {
-        status: callback_id === 'approve_dialog' ? 'Approved' : 'Rejected',
-        summary: `[name=${user.name} id=${user.id}]: ${comment})`,
-      },
-    })
-    .promise();
+  await pipeline.send(new PutApprovalResultCommand({
+    token,
+    pipelineName,
+    stageName,
+    actionName,
+    result: {
+      status: callback_id === 'approve_dialog' ? 'Approved' : 'Rejected',
+      summary: `[name=${user.name} id=${user.id}]: ${comment})`,
+    },
+  }));
 
   const messageBuilder = ApprovalMessageBuilder.fromApprovalRequest(approval);
 

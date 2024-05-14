@@ -1,4 +1,4 @@
-import { IAM } from 'aws-sdk';
+import { IAMClient, ListAccountAliasesCommand } from '@aws-sdk/client-iam';
 
 let accountAlias = '';
 
@@ -29,11 +29,11 @@ export class Account {
 
   public async getAccountAlias(): Promise<string> {
     if (!accountAlias) {
-      const iam = new IAM();
+      const iam = new IAMClient();
 
-      const { AccountAliases: aliases } = await iam.listAccountAliases().promise();
+      const { AccountAliases: aliases } = await iam.send(new ListAccountAliasesCommand());
 
-      accountAlias = aliases[0];
+      accountAlias = aliases![0];
     }
 
     return accountAlias;

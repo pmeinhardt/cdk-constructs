@@ -1,40 +1,22 @@
-const mockCreateRequest = jest.fn();
-const mockUpdateRequest = jest.fn();
-const mockTagResourceRequest = jest.fn();
-const mockUntagResourceRequest = jest.fn();
+import {
+  CodeDeployClient,
+  CreateDeploymentGroupCommand,
+  DeploymentOption,
+  DeploymentReadyAction,
+  DeploymentType,
+  InstanceAction,
+  TagResourceCommand,
+  UntagResourceCommand,
+  UpdateDeploymentGroupCommand,
+} from '@aws-sdk/client-codedeploy';
+import { mockClient } from 'aws-sdk-client-mock';
 
-jest.mock('aws-sdk', () => {
-  return {
-    CodeDeploy: jest.fn().mockImplementation(() => {
-      return {
-        createDeploymentGroup: mockCreateRequest.mockReturnValue({
-          promise: jest.fn().mockResolvedValue({
-            service: {
-              serviceArn: 'arn:aws:ecs:us-east-1:012345678910:service/MyCluster/MyService',
-              serviceName: 'MyService',
-            },
-          }),
-        }),
-        updateDeploymentGroup: mockUpdateRequest.mockReturnValue({
-          promise: jest.fn().mockResolvedValue({
-            service: {
-              serviceArn: 'arn:aws:ecs:us-east-1:012345678910:service/MyCluster/MyService',
-              serviceName: 'MyService',
-            },
-          }),
-        }),
-        tagResource: mockTagResourceRequest.mockReturnValue({
-          promise: jest.fn().mockResolvedValue({}),
-        }),
-        untagResource: mockUntagResourceRequest.mockReturnValue({
-          promise: jest.fn().mockResolvedValue({}),
-        }),
-      };
-    }),
-  };
-});
+const codeDeployClientMock = mockClient(CodeDeployClient);
 
-import { handleCreate, handleUpdate } from '../../../lambdas/ecs-deployment-group';
+import {
+  handleCreate,
+  handleUpdate,
+} from '../../../lambdas/ecs-deployment-group';
 import { defaultContext } from '../__fixtures__/default-context';
 import { defaultEvent } from '../__fixtures__/default-event';
 import { defaultLogger } from '../__fixtures__/default-logger';
@@ -50,12 +32,79 @@ const defaultEcsDeploymentGroupProperties = {
     },
   ],
   TargetGroupNames: ['Foo'],
-  ProdTrafficListenerArn: 'arn:aws:elasticloadbalancing::012345678910:listener/app/MyApp/foo/prod',
-  TestTrafficListenerArn: 'arn:aws:elasticloadbalancing::012345678910:listener/app/MyApp/foo/test',
+  ProdTrafficListenerArn:
+    'arn:aws:elasticloadbalancing::012345678910:listener/app/MyApp/foo/prod',
+  TestTrafficListenerArn:
+    'arn:aws:elasticloadbalancing::012345678910:listener/app/MyApp/foo/test',
   TerminationWaitTimeInMinutes: 5,
 };
 
+afterEach(() => {
+  codeDeployClientMock.reset();
+});
+
 describe('createHandler', () => {
+  const requestParams = {
+    applicationName: 'TestApplicationName',
+    deploymentGroupName: 'TestDeploymentGroupName',
+    serviceRoleArn: 'arn:aws:iam::012345678910:role/MyRole',
+    ecsServices: [
+      {
+        serviceName: 'Foo',
+        clusterName: 'Foo',
+      },
+    ],
+    loadBalancerInfo: {
+      targetGroupPairInfoList: [
+        {
+          prodTrafficRoute: {
+            listenerArns: [
+              'arn:aws:elasticloadbalancing::012345678910:listener/app/MyApp/foo/prod',
+            ],
+          },
+          testTrafficRoute: {
+            listenerArns: [
+              'arn:aws:elasticloadbalancing::012345678910:listener/app/MyApp/foo/test',
+            ],
+          },
+          targetGroups: [
+            {
+              name: 'Foo',
+            },
+          ],
+        },
+      ],
+    },
+    autoRollbackConfiguration: {
+      enabled: false,
+      events: undefined,
+    },
+    blueGreenDeploymentConfiguration: {
+      terminateBlueInstancesOnDeploymentSuccess: {
+        action: InstanceAction.TERMINATE,
+        terminationWaitTimeInMinutes: 5,
+      },
+      deploymentReadyOption: {
+        actionOnTimeout: DeploymentReadyAction.CONTINUE_DEPLOYMENT,
+      },
+    },
+    deploymentStyle: {
+      deploymentType: DeploymentType.BLUE_GREEN,
+      deploymentOption: DeploymentOption.WITHOUT_TRAFFIC_CONTROL,
+    },
+    deploymentConfigName: 'CodeDeployDefault.ECSAllAtOnce',
+    tags: [
+      { Key: 'foo', Value: 'bar' },
+      { Key: 'k', Value: 'west' },
+    ],
+  };
+
+  codeDeployClientMock
+    .on(CreateDeploymentGroupCommand, requestParams)
+    .resolves({
+      deploymentGroupId: '1',
+    });
+
   test('sends tags with create request', async () => {
     await handleCreate(
       {
@@ -71,17 +120,12 @@ describe('createHandler', () => {
         },
       },
       defaultContext,
-      defaultLogger,
+      defaultLogger
     );
 
-    expect(mockCreateRequest).toHaveBeenCalledWith(
-      expect.objectContaining({
-        tags: [
-          { Key: 'foo', Value: 'bar' },
-          { Key: 'k', Value: 'west' },
-        ],
-      }),
-    );
+    const codeDeployClientCalls = codeDeployClientMock.calls();
+
+    expect(codeDeployClientCalls).toHaveLength(1);
   });
 
   test('returns the physical id and arn of the deployment group', async () => {
@@ -100,10 +144,15 @@ describe('createHandler', () => {
       },
       {
         ...defaultContext,
-        invokedFunctionArn: 'arn:aws:lambda:eu-west-1:012345678910:function:MyCustomResourceHandler',
+        invokedFunctionArn:
+          'arn:aws:lambda:eu-west-1:012345678910:function:MyCustomResourceHandler',
       },
-      defaultLogger,
+      defaultLogger
     );
+
+    const codeDeployClientCalls = codeDeployClientMock.calls();
+
+    expect(codeDeployClientCalls).toHaveLength(1);
 
     expect(response).toEqual(
       expect.objectContaining({
@@ -111,13 +160,88 @@ describe('createHandler', () => {
         responseData: {
           Arn: 'arn:aws:codedeploy:eu-west-1:012345678910:deploymentgroup:TestApplicationName/TestDeploymentGroupName',
         },
-      }),
+      })
     );
   });
 });
 
 describe('updateHandler', () => {
+  const requestParams = {
+    applicationName: 'TestApplicationName',
+    currentDeploymentGroupName: 'TestDeploymentGroupName',
+    newDeploymentGroupName: 'TestDeploymentGroupName',
+    ecsServices: [
+      {
+        serviceName: 'Foo',
+        clusterName: 'Foo',
+      },
+    ],
+    loadBalancerInfo: {
+      targetGroupPairInfoList: [
+        {
+          prodTrafficRoute: {
+            listenerArns: [
+              'arn:aws:elasticloadbalancing::012345678910:listener/app/MyApp/foo/prod',
+            ],
+          },
+          testTrafficRoute: {
+            listenerArns: [
+              'arn:aws:elasticloadbalancing::012345678910:listener/app/MyApp/foo/test',
+            ],
+          },
+          targetGroups: [
+            {
+              name: 'Foo',
+            },
+          ],
+        },
+      ],
+    },
+    autoRollbackConfiguration: {
+      enabled: false,
+      events: undefined,
+    },
+    blueGreenDeploymentConfiguration: {
+      terminateBlueInstancesOnDeploymentSuccess: {
+        action: InstanceAction.TERMINATE,
+        terminationWaitTimeInMinutes: 5,
+      },
+      deploymentReadyOption: {
+        actionOnTimeout: DeploymentReadyAction.CONTINUE_DEPLOYMENT,
+      },
+    },
+    deploymentConfigName: 'CodeDeployDefault.ECSAllAtOnce',
+  };
+
+  codeDeployClientMock
+    .on(UpdateDeploymentGroupCommand, requestParams)
+    .resolves({
+      hooksNotCleanedUp: [],
+    });
+
   test('sends data update requests', async () => {
+    const untagRequestParams = {
+      ResourceArn:
+        'arn:aws:codedeploy:eu-west-1:012345678910:deploymentgroup:TestApplicationName/TestDeploymentGroupName',
+      TagKeys: ['foo'],
+    };
+
+    codeDeployClientMock
+      .on(UntagResourceCommand, untagRequestParams)
+      .resolves({});
+
+    const tagRequestParams = {
+      ResourceArn:
+        'arn:aws:codedeploy:eu-west-1:012345678910:deploymentgroup:TestApplicationName/TestDeploymentGroupName',
+      Tags: [
+        { Key: 'dis', Value: 'dat' },
+        { Key: 'k', Value: 'west' },
+        { Key: 'ye', Value: 'west' },
+      ],
+    };
+
+    codeDeployClientMock.on(TagResourceCommand, tagRequestParams).resolves({});
+
     await handleUpdate(
       {
         ...defaultEvent,
@@ -143,26 +267,12 @@ describe('updateHandler', () => {
         },
       },
       defaultContext,
-      defaultLogger,
+      defaultLogger
     );
 
-    expect(mockUpdateRequest).toHaveBeenCalled();
+    const codeDeployClientCalls = codeDeployClientMock.calls();
 
-    expect(mockUntagResourceRequest).toHaveBeenCalledWith({
-      ResourceArn: 'arn:aws:codedeploy:eu-west-1:012345678910:deploymentgroup:TestApplicationName/TestDeploymentGroupName',
-      TagKeys: ['foo'],
-    });
-
-    expect(mockTagResourceRequest).toHaveBeenCalledWith(
-      expect.objectContaining({
-        ResourceArn: 'arn:aws:codedeploy:eu-west-1:012345678910:deploymentgroup:TestApplicationName/TestDeploymentGroupName',
-        Tags: [
-          { Key: 'dis', Value: 'dat' },
-          { Key: 'k', Value: 'west' },
-          { Key: 'ye', Value: 'west' },
-        ],
-      }),
-    );
+    expect(codeDeployClientCalls).toHaveLength(3);
   });
 
   test('returns the physical id and arn of the deployment group', async () => {
@@ -181,9 +291,10 @@ describe('updateHandler', () => {
       },
       {
         ...defaultContext,
-        invokedFunctionArn: 'arn:aws:lambda:us-east-1:012345678910:function:MyCustomResourceHandler',
+        invokedFunctionArn:
+          'arn:aws:lambda:us-east-1:012345678910:function:MyCustomResourceHandler',
       },
-      defaultLogger,
+      defaultLogger
     );
 
     expect(response).toEqual(
@@ -192,7 +303,7 @@ describe('updateHandler', () => {
         responseData: {
           Arn: 'arn:aws:codedeploy:us-east-1:012345678910:deploymentgroup:TestApplicationName/TestDeploymentGroupName',
         },
-      }),
+      })
     );
   });
 });

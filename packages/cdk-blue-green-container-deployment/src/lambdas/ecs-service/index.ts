@@ -1,5 +1,17 @@
-import type { CloudFormationCustomResourceEvent } from 'aws-lambda';
-import { ECS } from 'aws-sdk';
+import {
+  CreateServiceCommand,
+  DeleteServiceCommand,
+  DeploymentConfiguration,
+  ECSClient,
+  LaunchType,
+  PropagateTags,
+  SchedulingStrategy,
+  TagResourceCommand,
+  UntagResourceCommand,
+  UpdateServiceCommand,
+  waitUntilServicesInactive,
+} from "@aws-sdk/client-ecs";
+import type { CloudFormationCustomResourceEvent } from "aws-lambda";
 import {
   customResourceHelper,
   OnCreateHandler,
@@ -7,7 +19,7 @@ import {
   OnDeleteHandler,
   ResourceHandler,
   ResourceHandlerReturn,
-} from 'custom-resource-helper';
+} from "custom-resource-helper";
 
 export interface Tag {
   Key: string;
@@ -19,23 +31,25 @@ export interface BlueGreenServiceProps {
   serviceName: string;
   containerName: string;
   taskDefinition: string;
-  launchType: string;
+  launchType: LaunchType;
   platformVersion: string;
   desiredCount: number;
   subnets: string[];
   securityGroups: string[];
   targetGroupArn: string;
   containerPort: number;
-  schedulingStrategy: string;
+  schedulingStrategy: SchedulingStrategy;
   healthCheckGracePeriodSeconds: number;
-  deploymentConfiguration: ECS.DeploymentConfiguration;
-  propagateTags: 'SERVICE' | 'TASK_DEFINITION' | string;
+  deploymentConfiguration: DeploymentConfiguration;
+  propagateTags: PropagateTags;
   tags: Tag[];
 }
 
-const ecs = new ECS();
+const ecs = new ECSClient();
 
-const getProperties = (props: CloudFormationCustomResourceEvent['ResourceProperties']): BlueGreenServiceProps => ({
+const getProperties = (
+  props: CloudFormationCustomResourceEvent["ResourceProperties"]
+): BlueGreenServiceProps => ({
   cluster: props.Cluster,
   serviceName: props.ServiceName,
   containerName: props.ContainerName,
@@ -54,7 +68,9 @@ const getProperties = (props: CloudFormationCustomResourceEvent['ResourcePropert
   tags: props.Tags ?? [],
 });
 
-export const handleCreate: OnCreateHandler = async (event): Promise<ResourceHandlerReturn> => {
+export const handleCreate: OnCreateHandler = async (
+  event
+): Promise<ResourceHandlerReturn> => {
   const {
     cluster,
     serviceName,
@@ -74,8 +90,8 @@ export const handleCreate: OnCreateHandler = async (event): Promise<ResourceHand
     tags,
   } = getProperties(event.ResourceProperties);
 
-  const { service } = await ecs
-    .createService({
+  const { service } = await ecs.send(
+    new CreateServiceCommand({
       cluster,
       serviceName,
       taskDefinition,
@@ -85,7 +101,7 @@ export const handleCreate: OnCreateHandler = async (event): Promise<ResourceHand
       schedulingStrategy,
       propagateTags,
       deploymentController: {
-        type: 'CODE_DEPLOY',
+        type: "CODE_DEPLOY",
       },
       networkConfiguration: {
         awsvpcConfiguration: {
@@ -106,9 +122,9 @@ export const handleCreate: OnCreateHandler = async (event): Promise<ResourceHand
         return { key: t.Key, value: t.Value };
       }),
     })
-    .promise();
+  );
 
-  if (!service) throw Error('Service could not be created');
+  if (!service) throw Error("Service could not be created");
 
   return {
     physicalResourceId: service.serviceArn as string,
@@ -126,44 +142,53 @@ export const handleCreate: OnCreateHandler = async (event): Promise<ResourceHand
  * updated, a new AWS CodeDeploy deployment should be created.
  * For more information, see CreateDeployment in the AWS CodeDeploy API Reference.
  */
-export const handleUpdate: OnUpdateHandler = async (event): Promise<ResourceHandlerReturn> => {
-  const { cluster, serviceName, desiredCount, deploymentConfiguration, healthCheckGracePeriodSeconds, tags } = getProperties(
-    event.ResourceProperties,
-  );
+export const handleUpdate: OnUpdateHandler = async (
+  event
+): Promise<ResourceHandlerReturn> => {
+  const {
+    cluster,
+    serviceName,
+    desiredCount,
+    deploymentConfiguration,
+    healthCheckGracePeriodSeconds,
+    tags,
+  } = getProperties(event.ResourceProperties);
 
-  const { service } = await ecs
-    .updateService({
+  const { service } = await ecs.send(
+    new UpdateServiceCommand({
       service: serviceName,
       cluster,
       desiredCount,
       deploymentConfiguration,
       healthCheckGracePeriodSeconds,
     })
-    .promise();
+  );
 
-  if (!service) throw Error('Service could not be updated');
+  if (!service) throw Error("Service could not be updated");
 
   const newTagKeys: string[] = tags.map((t: Tag) => t.Key);
-  const removableTagKeys: string[] = (event.OldResourceProperties.Tags || []).map((t: Tag) => t.Key).filter((t: string) => !newTagKeys.includes(t));
+  const removableTagKeys: string[] = (event.OldResourceProperties.Tags || [])
+    .map((t: Tag) => t.Key)
+    .filter((t: string) => !newTagKeys.includes(t));
 
   if (removableTagKeys.length > 0) {
-    await ecs
-      .untagResource({
+    await ecs.send(
+      new UntagResourceCommand({
         resourceArn: service.serviceArn as string,
         tagKeys: removableTagKeys,
       })
-      .promise();
+    );
   }
 
   if (tags.length > 0) {
-    await ecs
-      .tagResource({
+    await ecs.send(
+      new TagResourceCommand({
         resourceArn: service.serviceArn as string,
         tags: tags.map((t) => {
           return { key: t.Key, value: t.Value };
         }),
       })
-      .promise();
+    );
   }
 
   return {
@@ -177,20 +202,30 @@ export const handleUpdate: OnUpdateHandler = async (event): Promise<ResourceHand
 const handleDelete: OnDeleteHandler = async (event): Promise<void> => {
   const { cluster, serviceName } = getProperties(event.ResourceProperties);
 
-  await ecs
-    .deleteService({
+  await ecs.send(
+    new DeleteServiceCommand({
       service: serviceName,
       cluster,
       force: true,
     })
-    .promise();
+  );
 
-  await ecs
-    .waitFor('servicesInactive', {
-      cluster,
-      services: [serviceName],
-    })
-    .promise();
+  /**
+   * This constant is added to make the waiter behave in AWS SDK v3 similar to what was in v2.
+   * In AWS SDK v2 the waiter polls every 15 seconds (at most 40 times).
+   * https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/ECS.html#servicesInactive-waiter
+   */
+  const MAX_WAIT_TIME = 40 * 15;
+
+  const waiterConfiguration = {
+    client: ecs,
+    maxWaitTime: MAX_WAIT_TIME,
+  };
+
+  await waitUntilServicesInactive(waiterConfiguration, {
+    cluster,
+    services: [serviceName],
+  });
 };
 
 export const handler = customResourceHelper(
@@ -198,5 +233,5 @@ export const handler = customResourceHelper(
     onCreate: handleCreate,
     onUpdate: handleUpdate,
     onDelete: handleDelete,
-  }),
+  })
 );

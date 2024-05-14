@@ -1,5 +1,5 @@
+import { CodePipelineClient, GetPipelineExecutionCommand, GetPipelineStateCommand } from '@aws-sdk/client-codepipeline';
 import type { CodePipelineCloudWatchEvent } from 'aws-lambda';
-import { CodePipeline } from 'aws-sdk';
 import { getEnv } from 'get-env-or-die';
 
 import { NotifierMessageBuilder } from './notifier-message-builder';
@@ -14,7 +14,7 @@ const bot = new SlackBot({
   icon: getEnv('SLACK_BOT_ICON', ':robot_face:'),
 });
 
-const codePipeline = new CodePipeline({ apiVersion: '2015-07-09' });
+const codePipeline = new CodePipelineClient({ apiVersion: '2015-07-09' });
 
 export const processCodePipeline = async (event: CodePipelineCloudWatchEvent): Promise<void> => {
   const executionId = event.detail['execution-id'];
@@ -24,14 +24,14 @@ export const processCodePipeline = async (event: CodePipelineCloudWatchEvent): P
     return;
   }
 
-  const pipelineState = await codePipeline.getPipelineState({ name: event.detail.pipeline }).promise();
+  const pipelineState = await codePipeline.send(new GetPipelineStateCommand({
+    name: event.detail.pipeline,
+  }));
 
-  const { pipelineExecution } = await codePipeline
-    .getPipelineExecution({
-      pipelineName: event.detail.pipeline,
-      pipelineExecutionId: executionId,
-    })
-    .promise();
+  const { pipelineExecution } = await codePipeline.send(new GetPipelineExecutionCommand({
+    pipelineName: event.detail.pipeline,
+    pipelineExecutionId: executionId,
+  }));
 
   const notifierMessageBuilder = NotifierMessageBuilder.fromPipelineEventAndPipelineState(event, pipelineState, pipelineExecution);
 

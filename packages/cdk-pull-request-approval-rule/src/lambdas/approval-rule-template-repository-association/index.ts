@@ -1,10 +1,14 @@
+import {
+  AssociateApprovalRuleTemplateWithRepositoryCommand,
+  CodeCommitClient,
+  DisassociateApprovalRuleTemplateFromRepositoryCommand,
+} from '@aws-sdk/client-codecommit';
 import type {
   CloudFormationCustomResourceEvent,
   CloudFormationCustomResourceCreateEvent,
   CloudFormationCustomResourceUpdateEvent,
   CloudFormationCustomResourceDeleteEvent,
 } from 'aws-lambda';
-import { CodeCommit } from 'aws-sdk';
 
 export interface ApprovalRuleRepositoryAssociationProps {
   approvalRuleTemplateName: string;
@@ -15,7 +19,7 @@ interface HandlerReturn {
   PhysicalResourceId: string;
 }
 
-const codecommit = new CodeCommit();
+const codecommit = new CodeCommitClient();
 
 const getProperties = (
   props: CloudFormationCustomResourceEvent['ResourceProperties'] | CloudFormationCustomResourceUpdateEvent['OldResourceProperties'],
@@ -27,12 +31,10 @@ const getProperties = (
 const onCreate = async (event: CloudFormationCustomResourceCreateEvent): Promise<HandlerReturn> => {
   const { approvalRuleTemplateName, repositoryName } = getProperties(event.ResourceProperties);
 
-  await codecommit
-    .associateApprovalRuleTemplateWithRepository({
-      approvalRuleTemplateName,
-      repositoryName,
-    })
-    .promise();
+  await codecommit.send(new AssociateApprovalRuleTemplateWithRepositoryCommand({
+    approvalRuleTemplateName,
+    repositoryName,
+  }));
 
   return {
     PhysicalResourceId: approvalRuleTemplateName,
@@ -44,19 +46,15 @@ const onUpdate = async (event: CloudFormationCustomResourceUpdateEvent): Promise
   const oldProps = getProperties(event.OldResourceProperties);
 
   if (newProps.repositoryName !== oldProps.repositoryName || newProps.approvalRuleTemplateName !== oldProps.approvalRuleTemplateName) {
-    await codecommit
-      .disassociateApprovalRuleTemplateFromRepository({
-        approvalRuleTemplateName: oldProps.approvalRuleTemplateName,
-        repositoryName: oldProps.repositoryName,
-      })
-      .promise();
+    await codecommit.send(new DisassociateApprovalRuleTemplateFromRepositoryCommand({
+      approvalRuleTemplateName: oldProps.approvalRuleTemplateName,
+      repositoryName: oldProps.repositoryName,
+    }));
 
-    await codecommit
-      .associateApprovalRuleTemplateWithRepository({
-        approvalRuleTemplateName: newProps.approvalRuleTemplateName,
-        repositoryName: newProps.repositoryName,
-      })
-      .promise();
+    await codecommit.send(new AssociateApprovalRuleTemplateWithRepositoryCommand({
+      approvalRuleTemplateName: newProps.approvalRuleTemplateName,
+      repositoryName: newProps.repositoryName,
+    }));
   }
 
   return {
@@ -67,12 +65,10 @@ const onUpdate = async (event: CloudFormationCustomResourceUpdateEvent): Promise
 const onDelete = async (event: CloudFormationCustomResourceDeleteEvent): Promise<void> => {
   const { approvalRuleTemplateName, repositoryName } = getProperties(event.ResourceProperties);
 
-  await codecommit
-    .disassociateApprovalRuleTemplateFromRepository({
-      approvalRuleTemplateName,
-      repositoryName,
-    })
-    .promise();
+  await codecommit.send(new DisassociateApprovalRuleTemplateFromRepositoryCommand({
+    approvalRuleTemplateName,
+    repositoryName,
+  }));
 };
 
 export const handler = async (event: CloudFormationCustomResourceEvent): Promise<HandlerReturn | void> => {

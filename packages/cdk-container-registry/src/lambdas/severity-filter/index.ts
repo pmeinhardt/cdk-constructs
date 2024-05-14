@@ -1,4 +1,4 @@
-import { SNS } from 'aws-sdk';
+import { PublishCommand, SNSClient } from '@aws-sdk/client-sns';
 
 enum Severity {
   CRITICAL = 'CRITICAL',
@@ -20,7 +20,7 @@ export interface FilterEvent {
   alarmTopicArn: string;
 }
 
-const sns = new SNS();
+const sns = new SNSClient();
 
 export const handler = async (event: FilterEvent): Promise<void> => {
   const { alarmTopicArn, severity, repositoryName, findingSeveriyCounts, ...messageProps } = event;
@@ -34,11 +34,9 @@ export const handler = async (event: FilterEvent): Promise<void> => {
   };
 
   if (findingSeveriyCounts[severity]) {
-    await sns
-      .publish({
-        Message: JSON.stringify(alarmMessage),
-        TargetArn: alarmTopicArn,
-      })
-      .promise();
+    await sns.send(new PublishCommand({
+      Message: JSON.stringify(alarmMessage),
+      TargetArn: alarmTopicArn,
+    }));
   }
 };

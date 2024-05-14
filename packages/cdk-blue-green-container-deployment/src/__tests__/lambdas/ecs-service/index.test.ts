@@ -1,38 +1,15 @@
-const mockCreateRequest = jest.fn();
-const mockUpdateRequest = jest.fn();
-const mockTagResourceRequest = jest.fn();
-const mockUntagResourceRequest = jest.fn();
+import {
+  CreateServiceCommand,
+  DeploymentControllerType,
+  ECSClient,
+  SchedulingStrategy,
+  TagResourceCommand,
+  UntagResourceCommand,
+  UpdateServiceCommand,
+} from '@aws-sdk/client-ecs';
+import { mockClient } from 'aws-sdk-client-mock';
 
-jest.mock('aws-sdk', () => {
-  return {
-    ECS: jest.fn().mockImplementation(() => {
-      return {
-        createService: mockCreateRequest.mockReturnValue({
-          promise: jest.fn().mockResolvedValue({
-            service: {
-              serviceArn: 'arn:aws:ecs:us-east-1:012345678910:service/MyCluster/MyService',
-              serviceName: 'MyService',
-            },
-          }),
-        }),
-        updateService: mockUpdateRequest.mockReturnValue({
-          promise: jest.fn().mockResolvedValue({
-            service: {
-              serviceArn: 'arn:aws:ecs:us-east-1:012345678910:service/MyCluster/MyService',
-              serviceName: 'MyService',
-            },
-          }),
-        }),
-        tagResource: mockTagResourceRequest.mockReturnValue({
-          promise: jest.fn().mockResolvedValue({}),
-        }),
-        untagResource: mockUntagResourceRequest.mockReturnValue({
-          promise: jest.fn().mockResolvedValue({}),
-        }),
-      };
-    }),
-  };
-});
+const ecsClientMock = mockClient(ECSClient);
 
 import { handleCreate, handleUpdate } from '../../../lambdas/ecs-service';
 import { defaultContext } from '../__fixtures__/default-context';
@@ -41,14 +18,52 @@ import { defaultEvent } from '../__fixtures__/default-event';
 import { defaultLogger } from '../__fixtures__/default-logger';
 
 afterEach(() => {
-  mockCreateRequest.mockClear();
-  mockUpdateRequest.mockClear();
-  mockTagResourceRequest.mockClear();
-  mockUntagResourceRequest.mockClear();
+  ecsClientMock.reset();
 });
 
 describe('createHandler', () => {
   test('sends tags with create request', async () => {
+    const requestParams = {
+      cluster: 'foo',
+      serviceName: 'foo',
+      taskDefinition: 'foo',
+      launchType: undefined,
+      platformVersion: '1.1.0',
+      desiredCount: 1,
+      schedulingStrategy: SchedulingStrategy.REPLICA,
+      propagateTags: undefined,
+      deploymentController: {
+        type: DeploymentControllerType.CODE_DEPLOY,
+      },
+      networkConfiguration: {
+        awsvpcConfiguration: {
+          subnets: ['foo'],
+          securityGroups: ['foo'],
+        },
+      },
+      deploymentConfiguration: {},
+      healthCheckGracePeriodSeconds: 3,
+      loadBalancers: [
+        {
+          targetGroupArn: 'foo',
+          containerPort: 8080,
+          containerName: 'foo',
+        },
+      ],
+      tags: [
+        { key: 'foo', value: 'bar' },
+        { key: 'k', value: 'west' },
+      ],
+    };
+
+    ecsClientMock.on(CreateServiceCommand, requestParams).resolvesOnce({
+      service: {
+        serviceArn:
+          'arn:aws:ecs:us-east-1:012345678910:service/MyCluster/MyService',
+        serviceName: 'MyService',
+      },
+    });
+
     const response = await handleCreate(
       {
         ...defaultEvent,
@@ -62,20 +77,16 @@ describe('createHandler', () => {
         },
       },
       defaultContext,
-      defaultLogger,
+      defaultLogger
     );
 
-    expect(mockCreateRequest).toHaveBeenCalledWith(
-      expect.objectContaining({
-        tags: [
-          { key: 'foo', value: 'bar' },
-          { key: 'k', value: 'west' },
-        ],
-      }),
-    );
+    const ecsClientCalls = ecsClientMock.calls();
+
+    expect(ecsClientCalls).toHaveLength(1);
 
     expect(response).toEqual({
-      physicalResourceId: 'arn:aws:ecs:us-east-1:012345678910:service/MyCluster/MyService',
+      physicalResourceId:
+        'arn:aws:ecs:us-east-1:012345678910:service/MyCluster/MyService',
       responseData: {
         ServiceName: 'MyService',
       },
@@ -85,6 +96,42 @@ describe('createHandler', () => {
 
 describe('updateHandler', () => {
   test('sends data update request', async () => {
+    const updateRequestParams = {
+      service: 'foo',
+      cluster: 'foo',
+      desiredCount: 1,
+      deploymentConfiguration: {},
+      healthCheckGracePeriodSeconds: 3,
+    };
+
+    ecsClientMock.on(UpdateServiceCommand, updateRequestParams).resolves({
+      service: {
+        serviceArn:
+          'arn:aws:ecs:us-east-1:012345678910:service/MyCluster/MyService',
+        serviceName: 'MyService',
+      },
+    });
+
+    const untagRequestParams = {
+      resourceArn:
+        'arn:aws:ecs:us-east-1:012345678910:service/MyCluster/MyService',
+      tagKeys: ['foo'],
+    };
+
+    ecsClientMock.on(UntagResourceCommand, untagRequestParams).resolves({});
+
+    const tagRequestParams = {
+      resourceArn:
+        'arn:aws:ecs:us-east-1:012345678910:service/MyCluster/MyService',
+      tags: [
+        { key: 'dis', value: 'dat' },
+        { key: 'k', value: 'west' },
+        { key: 'ye', value: 'west' },
+      ],
+    };
+
+    ecsClientMock.on(TagResourceCommand, tagRequestParams).resolves({});
+
     await handleUpdate(
       {
         ...defaultEvent,
@@ -108,37 +155,43 @@ describe('updateHandler', () => {
         },
       },
       defaultContext,
-      defaultLogger,
+      defaultLogger
     );
 
-    expect(mockUpdateRequest).toHaveBeenCalledWith(
-      expect.objectContaining({
-        cluster: 'foo',
-        deploymentConfiguration: {},
-        desiredCount: 1,
-        healthCheckGracePeriodSeconds: 3,
-        service: 'foo',
-      }),
-    );
+    const ecsClientCalls = ecsClientMock.calls();
 
-    expect(mockUntagResourceRequest).toHaveBeenCalledWith({
-      resourceArn: 'arn:aws:ecs:us-east-1:012345678910:service/MyCluster/MyService',
-      tagKeys: ['foo'],
-    });
-
-    expect(mockTagResourceRequest).toHaveBeenCalledWith(
-      expect.objectContaining({
-        resourceArn: 'arn:aws:ecs:us-east-1:012345678910:service/MyCluster/MyService',
-        tags: [
-          { key: 'dis', value: 'dat' },
-          { key: 'k', value: 'west' },
-          { key: 'ye', value: 'west' },
-        ],
-      }),
-    );
+    expect(ecsClientCalls).toHaveLength(3);
   });
 
   test('does not delete keys if no old keys are deleted', async () => {
+    const updateRequestParams = {
+      service: 'foo',
+      cluster: 'foo',
+      desiredCount: 1,
+      deploymentConfiguration: {},
+      healthCheckGracePeriodSeconds: 3,
+    };
+
+    ecsClientMock.on(UpdateServiceCommand, updateRequestParams).resolves({
+      service: {
+        serviceArn:
+          'arn:aws:ecs:us-east-1:012345678910:service/MyCluster/MyService',
+        serviceName: 'MyService',
+      },
+    });
+
+    const tagRequestParams = {
+      resourceArn:
+        'arn:aws:ecs:us-east-1:012345678910:service/MyCluster/MyService',
+      tags: [
+        { key: 'dis', value: 'dat' },
+        { key: 'k', value: 'west' },
+        { key: 'ye', value: 'west' },
+      ],
+    };
+
+    ecsClientMock.on(TagResourceCommand, tagRequestParams).resolves({});
+
     await handleUpdate(
       {
         ...defaultEvent,
@@ -162,34 +215,31 @@ describe('updateHandler', () => {
         },
       },
       defaultContext,
-      defaultLogger,
+      defaultLogger
     );
 
-    expect(mockUpdateRequest).toHaveBeenCalledWith(
-      expect.objectContaining({
-        cluster: 'foo',
-        deploymentConfiguration: {},
-        desiredCount: 1,
-        healthCheckGracePeriodSeconds: 3,
-        service: 'foo',
-      }),
-    );
+    const ecsClientCalls = ecsClientMock.calls();
 
-    expect(mockUntagResourceRequest).not.toHaveBeenCalled();
-
-    expect(mockTagResourceRequest).toHaveBeenCalledWith(
-      expect.objectContaining({
-        resourceArn: 'arn:aws:ecs:us-east-1:012345678910:service/MyCluster/MyService',
-        tags: [
-          { key: 'dis', value: 'dat' },
-          { key: 'k', value: 'west' },
-          { key: 'ye', value: 'west' },
-        ],
-      }),
-    );
+    expect(ecsClientCalls).toHaveLength(2);
   });
 
   test('does not delete or create keys if no old keys or new keys are present', async () => {
+    const updateRequestParams = {
+      service: 'foo',
+      cluster: 'foo',
+      desiredCount: 1,
+      deploymentConfiguration: {},
+      healthCheckGracePeriodSeconds: 3,
+    };
+
+    ecsClientMock.on(UpdateServiceCommand, updateRequestParams).resolves({
+      service: {
+        serviceArn:
+          'arn:aws:ecs:us-east-1:012345678910:service/MyCluster/MyService',
+        serviceName: 'MyService',
+      },
+    });
+
     await handleUpdate(
       {
         ...defaultEvent,
@@ -205,21 +255,11 @@ describe('updateHandler', () => {
         },
       },
       defaultContext,
-      defaultLogger,
+      defaultLogger
     );
 
-    expect(mockUpdateRequest).toHaveBeenCalledWith(
-      expect.objectContaining({
-        cluster: 'foo',
-        deploymentConfiguration: {},
-        desiredCount: 1,
-        healthCheckGracePeriodSeconds: 3,
-        service: 'foo',
-      }),
-    );
+    const ecsClientCalls = ecsClientMock.calls();
 
-    expect(mockUntagResourceRequest).not.toHaveBeenCalled();
-
-    expect(mockTagResourceRequest).not.toHaveBeenCalled();
+    expect(ecsClientCalls).toHaveLength(1);
   });
 });

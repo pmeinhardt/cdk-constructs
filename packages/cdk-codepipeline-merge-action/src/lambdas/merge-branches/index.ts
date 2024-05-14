@@ -1,10 +1,12 @@
+import { CodeCommitClient, MergeBranchesByFastForwardCommand } from '@aws-sdk/client-codecommit';
+import { CodePipelineClient, PutJobFailureResultCommand, PutJobSuccessResultCommand } from '@aws-sdk/client-codepipeline';
+import { AssumeRoleCommand, STSClient } from '@aws-sdk/client-sts';
 import type { CodePipelineEvent } from 'aws-lambda';
-import { CodeCommit, CodePipeline, STS } from 'aws-sdk';
 import { getEnv } from 'get-env-or-die';
 
 // default session
-const codePipeline = new CodePipeline();
-const sts = new STS();
+const codePipeline = new CodePipelineClient();
+const sts = new STSClient();
 
 export const handler = async (event: CodePipelineEvent): Promise<string> => {
   const { id: jobId, data: jobData } = event['CodePipeline.job'];
@@ -16,34 +18,32 @@ export const handler = async (event: CodePipelineEvent): Promise<string> => {
 
     const codeCommit = await (async () => {
       if (!codeCommitRoleArn) {
-        return new CodeCommit();
+        return new CodeCommitClient();
       }
 
-      const { Credentials: credentials } = await sts
-        .assumeRole({
-          RoleArn: codeCommitRoleArn,
-          RoleSessionName: `Merge-${repositoryName}-${sourceCommitSpecifier}-${destinationCommitSpecifier}`,
-        })
-        .promise();
+      const { Credentials: credentials } = await sts.send(new AssumeRoleCommand({
+        RoleArn: codeCommitRoleArn,
+        RoleSessionName: `Merge-${repositoryName}-${sourceCommitSpecifier}-${destinationCommitSpecifier}`,
+      }));
 
       if (!credentials) {
         throw new Error('Crossaccount role could not be assumed');
       }
 
-      return new CodeCommit({
-        accessKeyId: credentials.AccessKeyId,
-        secretAccessKey: credentials.SecretAccessKey,
-        sessionToken: credentials.SessionToken,
+      return new CodeCommitClient({
+        credentials: {
+          accessKeyId: credentials.AccessKeyId!,
+          secretAccessKey: credentials.SecretAccessKey!,
+          sessionToken: credentials.SessionToken,
+        }
       });
     })();
 
-    const { commitId } = await codeCommit
-      .mergeBranchesByFastForward({
-        repositoryName,
-        sourceCommitSpecifier,
-        destinationCommitSpecifier,
-      })
-      .promise();
+    const { commitId } = await codeCommit.send(new MergeBranchesByFastForwardCommand({
+      repositoryName,
+      sourceCommitSpecifier,
+      destinationCommitSpecifier,
+    }));
 
     await putJobSuccess(jobId, commitId);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -104,11 +104,9 @@ const putJobSuccess = async (jobId: string, message?: string): Promise<void> => 
     console.log(message);
   }
 
-  await codePipeline
-    .putJobSuccessResult({
-      jobId,
-    })
-    .promise();
+  await codePipeline.send(new PutJobSuccessResultCommand({
+    jobId,
+  }));
 };
 
 /**
@@ -121,13 +119,11 @@ const putJobFailure = async (jobId: string, message: string): Promise<void> => {
   console.log('Putting job failure');
   console.log(message);
 
-  await codePipeline
-    .putJobFailureResult({
-      jobId,
-      failureDetails: {
-        message,
-        type: 'JobFailed',
-      },
-    })
-    .promise();
+  await codePipeline.send(new PutJobFailureResultCommand({
+    jobId,
+    failureDetails: {
+      message,
+      type: 'JobFailed',
+    },
+  }));
 };

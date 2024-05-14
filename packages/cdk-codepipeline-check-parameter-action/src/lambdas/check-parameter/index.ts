@@ -1,9 +1,11 @@
+import { CodePipelineClient, PutJobFailureResultCommand, PutJobSuccessResultCommand } from '@aws-sdk/client-codepipeline';
+import { GetParameterCommand, SSMClient } from '@aws-sdk/client-ssm';
+import { AssumeRoleCommand, STSClient } from '@aws-sdk/client-sts';
 import type { CodePipelineEvent } from 'aws-lambda';
-import { SSM, CodePipeline, STS } from 'aws-sdk';
 
 // default session
-const codePipeline = new CodePipeline();
-const sts = new STS();
+const codePipeline = new CodePipelineClient();
+const sts = new STSClient();
 
 export const handler = async (event: CodePipelineEvent): Promise<void> => {
   const { id: jobId, data: jobData } = event['CodePipeline.job'];
@@ -13,33 +15,31 @@ export const handler = async (event: CodePipelineEvent): Promise<void> => {
 
     const ssm = await (async () => {
       if (!crossAccountRoleArn) {
-        return new SSM();
+        return new SSMClient();
       }
 
-      const { Credentials: credentials } = await sts
-        .assumeRole({
-          RoleArn: crossAccountRoleArn,
-          RoleSessionName: `CheckParameter-${parameterName}`,
-        })
-        .promise();
+      const { Credentials: credentials } = await sts.send(new AssumeRoleCommand({
+        RoleArn: crossAccountRoleArn,
+        RoleSessionName: `CheckParameter-${parameterName}`,
+      }));
 
       if (!credentials) {
         throw new Error('Crossaccount role could not be assumed');
       }
 
-      return new SSM({
-        accessKeyId: credentials.AccessKeyId,
-        secretAccessKey: credentials.SecretAccessKey,
-        sessionToken: credentials.SessionToken,
+      return new SSMClient({
+        credentials: {
+          accessKeyId: credentials.AccessKeyId!,
+          secretAccessKey: credentials.SecretAccessKey!,
+          sessionToken: credentials.SessionToken,
+        }
       });
     })();
 
-    const { Parameter: parameter } = await ssm
-      .getParameter({
-        Name: parameterName,
-        WithDecryption: false,
-      })
-      .promise();
+    const { Parameter: parameter } = await ssm.send(new GetParameterCommand({
+      Name: parameterName,
+      WithDecryption: false,
+    }));
 
     if (!parameter?.Value) {
       throw new Error('No parameter value');
@@ -106,11 +106,9 @@ const putJobSuccess = async (jobId: string, message?: string): Promise<void> => 
     console.log(message);
   }
 
-  await codePipeline
-    .putJobSuccessResult({
-      jobId,
-    })
-    .promise();
+  await codePipeline.send(new PutJobSuccessResultCommand({
+    jobId,
+  }));
 };
 
 /**
@@ -123,13 +121,11 @@ const putJobFailure = async (jobId: string, message: string): Promise<void> => {
   console.log('Putting job failure');
   console.log(message);
 
-  await codePipeline
-    .putJobFailureResult({
-      jobId,
-      failureDetails: {
-        message,
-        type: 'JobFailed',
-      },
-    })
-    .promise();
+  await codePipeline.send(new PutJobFailureResultCommand({
+    jobId,
+    failureDetails: {
+      message,
+      type: 'JobFailed',
+    },
+  }));
 };

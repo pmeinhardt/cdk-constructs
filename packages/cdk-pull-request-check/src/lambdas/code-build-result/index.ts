@@ -1,8 +1,12 @@
+import {
+  CodeCommitClient,
+  PostCommentForPullRequestCommand,
+  UpdatePullRequestApprovalStateCommand,
+} from '@aws-sdk/client-codecommit';
 import type { CodeBuildCloudWatchStateEvent } from 'aws-lambda';
-import { CodeCommit } from 'aws-sdk';
 import { getBoolEnv } from 'get-env-or-die';
 
-const codeCommit = new CodeCommit();
+const codeCommit = new CodeCommitClient();
 
 export const handler = async (event: CodeBuildCloudWatchStateEvent): Promise<void> => {
   const { region, detail } = event;
@@ -18,25 +22,21 @@ export const handler = async (event: CodeBuildCloudWatchStateEvent): Promise<voi
   switch (detail['build-status']) {
     case CodeBuildState.IN_PROGRESS:
       if (shouldUpdateApprovalState) {
-        await codeCommit
-          .updatePullRequestApprovalState({
-            pullRequestId,
-            revisionId,
-            approvalState: 'REVOKE',
-          })
-          .promise();
+        await codeCommit.send(new UpdatePullRequestApprovalStateCommand({
+          pullRequestId,
+          revisionId,
+          approvalState: 'REVOKE',
+        }));
       }
 
       if (shouldPostComment) {
-        await codeCommit
-          .postCommentForPullRequest({
-            pullRequestId,
-            repositoryName,
-            beforeCommitId,
-            afterCommitId,
-            content: `** Build started at ${'time'} **`,
-          })
-          .promise();
+        await codeCommit.send(new PostCommentForPullRequestCommand({
+          pullRequestId,
+          repositoryName,
+          beforeCommitId,
+          afterCommitId,
+          content: `** Build started at ${'time'} **`,
+        }));
       }
       break;
 
@@ -46,27 +46,23 @@ export const handler = async (event: CodeBuildCloudWatchStateEvent): Promise<voi
 
         const content = `![Failing](${badge} "Failing") - See the [Logs](${detail['additional-information'].logs['deep-link']})`;
 
-        await codeCommit
-          .postCommentForPullRequest({
-            pullRequestId,
-            repositoryName,
-            beforeCommitId,
-            afterCommitId,
-            content,
-          })
-          .promise();
+        await codeCommit.send(new PostCommentForPullRequestCommand({
+          pullRequestId,
+          repositoryName,
+          beforeCommitId,
+          afterCommitId,
+          content,
+        }));
       }
       break;
 
     case CodeBuildState.SUCCEEDED:
       if (shouldUpdateApprovalState) {
-        await codeCommit
-          .updatePullRequestApprovalState({
-            pullRequestId,
-            revisionId,
-            approvalState: 'APPROVE',
-          })
-          .promise();
+        await codeCommit.send(new UpdatePullRequestApprovalStateCommand({
+          pullRequestId,
+          revisionId,
+          approvalState: 'APPROVE',
+        }));
       }
 
       if (shouldPostComment) {
@@ -74,15 +70,13 @@ export const handler = async (event: CodeBuildCloudWatchStateEvent): Promise<voi
 
         const content = `![Passing](${badge} "Passing") - See the [Logs](${detail['additional-information'].logs['deep-link']})`;
 
-        await codeCommit
-          .postCommentForPullRequest({
-            pullRequestId,
-            repositoryName,
-            beforeCommitId,
-            afterCommitId,
-            content,
-          })
-          .promise();
+        await codeCommit.send(new PostCommentForPullRequestCommand({
+          pullRequestId,
+          repositoryName,
+          beforeCommitId,
+          afterCommitId,
+          content,
+        }));
       }
       break;
 

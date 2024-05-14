@@ -11,7 +11,7 @@ export const defaultEcsServiceResourceProperties = {
   SecurityGroups: ['foo'],
   TargetGroupArn: 'foo',
   ContainerPort: 8080,
-  SchedulingStrategy: 'foo',
+  SchedulingStrategy: 'REPLICA',
   HealthCheckGracePeriodSeconds: 3,
   DeploymentConfiguration: {},
   PropogateTags: 'SERVICE',

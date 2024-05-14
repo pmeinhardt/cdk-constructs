@@ -1,6 +1,6 @@
+import { GetPipelineStateOutput, PipelineExecution } from '@aws-sdk/client-codepipeline';
 import { MessageAttachment } from '@slack/web-api';
 import type { CodePipelineCloudWatchEvent } from 'aws-lambda';
-import { CodePipeline } from 'aws-sdk';
 
 import { Message } from './message';
 import { MessageBuilder } from './message-builder';
@@ -21,8 +21,8 @@ const getPipelineStateIcon = (state: string | undefined): string => {
 export class NotifierMessageBuilder extends MessageBuilder {
   public static fromPipelineEventAndPipelineState(
     pipelineEvent: CodePipelineCloudWatchEvent,
-    pipelineState: CodePipeline.Types.GetPipelineStateOutput,
-    pipelineExecution: CodePipeline.Types.PipelineExecution | undefined,
+    pipelineState: GetPipelineStateOutput,
+    pipelineExecution: PipelineExecution | undefined,
     existingMessage?: Message,
   ): NotifierMessageBuilder {
     const pipelineName = pipelineEvent.detail.pipeline;
@@ -59,7 +59,7 @@ export class NotifierMessageBuilder extends MessageBuilder {
     });
   }
 
-  private static getRevisionInfo(pipelineExecution: CodePipeline.Types.PipelineExecution | undefined): string {
+  private static getRevisionInfo(pipelineExecution: PipelineExecution | undefined): string {
     let revisonInfo = ' - no Info -';
     if (pipelineExecution?.artifactRevisions) {
       const rev = pipelineExecution.artifactRevisions[0];
@@ -71,7 +71,7 @@ export class NotifierMessageBuilder extends MessageBuilder {
     return revisonInfo;
   }
 
-  private static getPipelineExecutionStatus(pipelineExecution: CodePipeline.Types.PipelineExecution | undefined): string {
+  private static getPipelineExecutionStatus(pipelineExecution: PipelineExecution | undefined): string {
     let pipelineExecutionStatus = 'UNKNOWN';
     if (pipelineExecution) {
       const { status } = pipelineExecution;
@@ -80,7 +80,7 @@ export class NotifierMessageBuilder extends MessageBuilder {
     return pipelineExecutionStatus;
   }
 
-  private static getPipelineStatusText(pipelineState: CodePipeline.Types.GetPipelineStateOutput, executionId: string): string {
+  private static getPipelineStatusText(pipelineState: GetPipelineStateOutput, executionId: string): string {
     let pipelineStatusText = '';
     if (pipelineState.stageStates) {
       pipelineState.stageStates.forEach((stageState) => {
@@ -92,7 +92,7 @@ export class NotifierMessageBuilder extends MessageBuilder {
     return pipelineStatusText;
   }
 
-  private static getBuildActionStatusText(pipelineState: CodePipeline.Types.GetPipelineStateOutput, executionId: string): string {
+  private static getBuildActionStatusText(pipelineState: GetPipelineStateOutput, executionId: string): string {
     let actionStatusText = '';
     if (pipelineState.stageStates) {
       pipelineState.stageStates.forEach((stageState) => {

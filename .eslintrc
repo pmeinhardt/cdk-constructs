@@ -14,8 +14,8 @@
       }
     ],
     "cdk/ban-lambda-runtimes": [
-      "error", 
-      { 
+      "error",
+      {
         "bannedRuntimes": [
           "NODEJS",
           "NODEJS_4_3",
@@ -23,10 +23,12 @@
           "NODEJS_8_10",
           "NODEJS_10_X",
           "NODEJS_12_X",
+          "NODEJS_14_X",
+          "NODEJS_16_X",
           "DOTNET_CORE_1",
-          "DOTNET_CORE_2",
+          "DOTNET_CORE_2"
         ]
       }
-    ],
+    ]
   }
 }

@@ -1,12 +1,12 @@
+import { EventBridgeClient, PutEventsCommand, PutEventsCommandInput } from '@aws-sdk/client-eventbridge';
 import { SecretKey } from '@cloudcomponents/lambda-utils';
 import type { APIGatewayProxyHandler } from 'aws-lambda';
-import { EventBridge } from 'aws-sdk';
 import { getEnv } from 'get-env-or-die';
 import Stripe from 'stripe';
 
-const eventBridge = new EventBridge();
-const endpointSecretKey = new SecretKey(getEnv('ENDPOINT_SECRET_STRING'), { configuration: { maxRetries: 5 } });
-const apiSecretKey = new SecretKey(getEnv('SECRET_KEY_STRING'), { configuration: { maxRetries: 5 } });
+const eventBridge = new EventBridgeClient();
+const endpointSecretKey = new SecretKey(getEnv('ENDPOINT_SECRET_STRING'), { configuration: { maxAttempts: 5 } });
+const apiSecretKey = new SecretKey(getEnv('SECRET_KEY_STRING'), { configuration: { maxAttempts: 5 } });
 
 export const handler: APIGatewayProxyHandler = async (event) => {
   try {
@@ -31,7 +31,7 @@ export const handler: APIGatewayProxyHandler = async (event) => {
 
     const { type, ...details } = eventReceived;
 
-    const params: EventBridge.PutEventsRequest = {
+    const params: PutEventsCommandInput = {
       Entries: [
         {
           Detail: JSON.stringify(details),
@@ -43,7 +43,7 @@ export const handler: APIGatewayProxyHandler = async (event) => {
       ],
     };
 
-    await eventBridge.putEvents(params).promise();
+    await eventBridge.send(new PutEventsCommand(params));
 
     return {
       statusCode: 200,
