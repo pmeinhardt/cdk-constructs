@@ -59,20 +59,20 @@
     }
   },
   "peerDependencies": {
-    "aws-cdk-lib": "^2.28.0",
-    "constructs": "^10.0.41"
+    "aws-cdk-lib": "^2.141.0",
+    "constructs": "^10.3.0"
   },
   "devDependencies": {
-    "@aws-cdk/assert": "2.28.0",
-    "@aws-sdk/client-lambda": "^3.567.0",
+    "@aws-cdk/assert": "2.68.0",
+    "@aws-sdk/client-lambda": "^3.575.0",
     "@types/adm-zip": "^0.4.34",
     "adm-zip": "^0.5.9",
-    "aws-cdk-lib": "^2.28.0",
+    "aws-cdk-lib": "^2.141.0",
     "aws-local-testing-library": "^0.0.7",
     "axios": "^0.25.0",
-    "constructs": "10.0.41",
+    "constructs": "10.3.0",
     "custom-resource-helper": "^1.0.15",
-    "jest-cdk-snapshot": "^2.0.1"
+    "jest-cdk-snapshot": "^2.2.1"
   },
   "externals": [
     "@aws-sdk/client-lambda",

@@ -982,7 +982,7 @@ Object {
               Object {
                 "Ref": "UserPoolUserPoolClient40176907",
               },
-              "-updated-client\\"}}",
+              "-updated-client\\"},\\"logApiResponseData\\":true}",
             ],
           ],
         },
@@ -1027,7 +1027,7 @@ Object {
               Object {
                 "Ref": "UserPoolUserPoolClient40176907",
               },
-              "-updated-client\\"}}",
+              "-updated-client\\"},\\"logApiResponseData\\":true}",
             ],
           ],
         },
@@ -2372,7 +2372,7 @@ Object {
               Object {
                 "Ref": "UserPoolUserPoolClient40176907",
               },
-              "-retrieved-client-secret\\"}}",
+              "-retrieved-client-secret\\"},\\"logApiResponseData\\":true}",
             ],
           ],
         },
@@ -2403,7 +2403,7 @@ Object {
               Object {
                 "Ref": "UserPoolUserPoolClient40176907",
               },
-              "-retrieved-client-secret\\"}}",
+              "-retrieved-client-secret\\"},\\"logApiResponseData\\":true}",
             ],
           ],
         },
@@ -2518,7 +2518,7 @@ Object {
               Object {
                 "Ref": "UserPoolUserPoolClient40176907",
               },
-              "-updated-client\\"}}",
+              "-updated-client\\"},\\"logApiResponseData\\":true}",
             ],
           ],
         },
@@ -2563,7 +2563,7 @@ Object {
               Object {
                 "Ref": "UserPoolUserPoolClient40176907",
               },
-              "-updated-client\\"}}",
+              "-updated-client\\"},\\"logApiResponseData\\":true}",
             ],
           ],
         },
