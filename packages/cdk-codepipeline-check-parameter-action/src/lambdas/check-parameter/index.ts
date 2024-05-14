@@ -1,4 +1,8 @@
-import { CodePipelineClient, PutJobFailureResultCommand, PutJobSuccessResultCommand } from '@aws-sdk/client-codepipeline';
+import {
+  CodePipelineClient,
+  PutJobFailureResultCommand,
+  PutJobSuccessResultCommand,
+} from '@aws-sdk/client-codepipeline';
 import { GetParameterCommand, SSMClient } from '@aws-sdk/client-ssm';
 import { AssumeRoleCommand, STSClient } from '@aws-sdk/client-sts';
 import type { CodePipelineEvent } from 'aws-lambda';
@@ -18,10 +22,12 @@ export const handler = async (event: CodePipelineEvent): Promise<void> => {
         return new SSMClient();
       }
 
-      const { Credentials: credentials } = await sts.send(new AssumeRoleCommand({
-        RoleArn: crossAccountRoleArn,
-        RoleSessionName: `CheckParameter-${parameterName}`,
-      }));
+      const { Credentials: credentials } = await sts.send(
+        new AssumeRoleCommand({
+          RoleArn: crossAccountRoleArn,
+          RoleSessionName: `CheckParameter-${parameterName}`,
+        }),
+      );
 
       if (!credentials) {
         throw new Error('Crossaccount role could not be assumed');
@@ -29,17 +35,21 @@ export const handler = async (event: CodePipelineEvent): Promise<void> => {
 
       return new SSMClient({
         credentials: {
+          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
           accessKeyId: credentials.AccessKeyId!,
+          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
           secretAccessKey: credentials.SecretAccessKey!,
           sessionToken: credentials.SessionToken,
-        }
+        },
       });
     })();
 
-    const { Parameter: parameter } = await ssm.send(new GetParameterCommand({
-      Name: parameterName,
-      WithDecryption: false,
-    }));
+    const { Parameter: parameter } = await ssm.send(
+      new GetParameterCommand({
+        Name: parameterName,
+        WithDecryption: false,
+      }),
+    );
 
     if (!parameter?.Value) {
       throw new Error('No parameter value');
@@ -106,9 +116,11 @@ const putJobSuccess = async (jobId: string, message?: string): Promise<void> => 
     console.log(message);
   }
 
-  await codePipeline.send(new PutJobSuccessResultCommand({
-    jobId,
-  }));
+  await codePipeline.send(
+    new PutJobSuccessResultCommand({
+      jobId,
+    }),
+  );
 };
 
 /**
@@ -121,11 +133,13 @@ const putJobFailure = async (jobId: string, message: string): Promise<void> => {
   console.log('Putting job failure');
   console.log(message);
 
-  await codePipeline.send(new PutJobFailureResultCommand({
-    jobId,
-    failureDetails: {
-      message,
-      type: 'JobFailed',
-    },
-  }));
+  await codePipeline.send(
+    new PutJobFailureResultCommand({
+      jobId,
+      failureDetails: {
+        message,
+        type: 'JobFailed',
+      },
+    }),
+  );
 };

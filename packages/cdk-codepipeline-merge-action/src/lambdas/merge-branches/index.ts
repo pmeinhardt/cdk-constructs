@@ -1,5 +1,9 @@
 import { CodeCommitClient, MergeBranchesByFastForwardCommand } from '@aws-sdk/client-codecommit';
-import { CodePipelineClient, PutJobFailureResultCommand, PutJobSuccessResultCommand } from '@aws-sdk/client-codepipeline';
+import {
+  CodePipelineClient,
+  PutJobFailureResultCommand,
+  PutJobSuccessResultCommand,
+} from '@aws-sdk/client-codepipeline';
 import { AssumeRoleCommand, STSClient } from '@aws-sdk/client-sts';
 import type { CodePipelineEvent } from 'aws-lambda';
 import { getEnv } from 'get-env-or-die';
@@ -21,10 +25,12 @@ export const handler = async (event: CodePipelineEvent): Promise<string> => {
         return new CodeCommitClient();
       }
 
-      const { Credentials: credentials } = await sts.send(new AssumeRoleCommand({
-        RoleArn: codeCommitRoleArn,
-        RoleSessionName: `Merge-${repositoryName}-${sourceCommitSpecifier}-${destinationCommitSpecifier}`,
-      }));
+      const { Credentials: credentials } = await sts.send(
+        new AssumeRoleCommand({
+          RoleArn: codeCommitRoleArn,
+          RoleSessionName: `Merge-${repositoryName}-${sourceCommitSpecifier}-${destinationCommitSpecifier}`,
+        }),
+      );
 
       if (!credentials) {
         throw new Error('Crossaccount role could not be assumed');
@@ -32,18 +38,22 @@ export const handler = async (event: CodePipelineEvent): Promise<string> => {
 
       return new CodeCommitClient({
         credentials: {
+          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
           accessKeyId: credentials.AccessKeyId!,
+          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
           secretAccessKey: credentials.SecretAccessKey!,
           sessionToken: credentials.SessionToken,
-        }
+        },
       });
     })();
 
-    const { commitId } = await codeCommit.send(new MergeBranchesByFastForwardCommand({
-      repositoryName,
-      sourceCommitSpecifier,
-      destinationCommitSpecifier,
-    }));
+    const { commitId } = await codeCommit.send(
+      new MergeBranchesByFastForwardCommand({
+        repositoryName,
+        sourceCommitSpecifier,
+        destinationCommitSpecifier,
+      }),
+    );
 
     await putJobSuccess(jobId, commitId);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -104,9 +114,11 @@ const putJobSuccess = async (jobId: string, message?: string): Promise<void> => 
     console.log(message);
   }
 
-  await codePipeline.send(new PutJobSuccessResultCommand({
-    jobId,
-  }));
+  await codePipeline.send(
+    new PutJobSuccessResultCommand({
+      jobId,
+    }),
+  );
 };
 
 /**
@@ -119,11 +131,13 @@ const putJobFailure = async (jobId: string, message: string): Promise<void> => {
   console.log('Putting job failure');
   console.log(message);
 
-  await codePipeline.send(new PutJobFailureResultCommand({
-    jobId,
-    failureDetails: {
-      message,
-      type: 'JobFailed',
-    },
-  }));
+  await codePipeline.send(
+    new PutJobFailureResultCommand({
+      jobId,
+      failureDetails: {
+        message,
+        type: 'JobFailed',
+      },
+    }),
+  );
 };

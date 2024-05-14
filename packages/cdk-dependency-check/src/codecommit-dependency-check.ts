@@ -189,7 +189,13 @@ export class CodeCommitDependencyCheck extends Construct {
     this.checkProject.addToRolePolicy(
       new PolicyStatement({
         resources: [repositoryArn],
-        actions: ['codecommit:BatchGet*', 'codecommit:Get*', 'codecommit:Describe*', 'codecommit:List*', 'codecommit:GitPull'],
+        actions: [
+          'codecommit:BatchGet*',
+          'codecommit:Get*',
+          'codecommit:Describe*',
+          'codecommit:List*',
+          'codecommit:GitPull',
+        ],
       }),
     );
 

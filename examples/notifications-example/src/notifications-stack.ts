@@ -1,4 +1,8 @@
-import { SlackChannelConfiguration, MSTeamsIncomingWebhookConfiguration, AccountLabelMode } from '@cloudcomponents/cdk-chatops';
+import {
+  SlackChannelConfiguration,
+  MSTeamsIncomingWebhookConfiguration,
+  AccountLabelMode,
+} from '@cloudcomponents/cdk-chatops';
 import {
   RepositoryNotificationRule,
   PipelineNotificationRule,
@@ -45,7 +49,11 @@ export class NotificationsStack extends Stack {
     new RepositoryNotificationRule(this, 'RepoNotifications', {
       name: 'notifications-repository',
       repository,
-      events: [RepositoryEvent.COMMENTS_ON_COMMITS, RepositoryEvent.PULL_REQUEST_CREATED, RepositoryEvent.PULL_REQUEST_MERGED],
+      events: [
+        RepositoryEvent.COMMENTS_ON_COMMITS,
+        RepositoryEvent.PULL_REQUEST_CREATED,
+        RepositoryEvent.PULL_REQUEST_MERGED,
+      ],
       targets: [new SlackChannel(slackChannel), new MSTeamsIncomingWebhook(webhook)],
     });
 

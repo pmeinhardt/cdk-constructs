@@ -26,8 +26,17 @@ export class SlackNotifier extends Construct {
   constructor(scope: Construct, id: string, props: SlackNotifierProps) {
     super(scope, id);
 
-    const { slackBotToken, slackSigningSecret, slackChannel, slackChannelId, slackChannelTypes, slackBotName, slackBotIcon, pipeline, stageNames } =
-      props;
+    const {
+      slackBotToken,
+      slackSigningSecret,
+      slackChannel,
+      slackChannelId,
+      slackChannelTypes,
+      slackBotName,
+      slackBotIcon,
+      pipeline,
+      stageNames,
+    } = props;
 
     this.environment = {
       SLACK_BOT_TOKEN: slackBotToken,
@@ -83,10 +92,14 @@ export class SlackNotifier extends Construct {
 
   protected validate(this: SlackNotifier): string[] {
     if (this.environment.SLACK_CHANNEL && this.environment.SLACK_CHANNEL_ID) {
-      return ['Redundant Configuration: Please configure slackChannel by id (prop slackChannelId) OR name (prop slackChannel)'];
+      return [
+        'Redundant Configuration: Please configure slackChannel by id (prop slackChannelId) OR name (prop slackChannel)',
+      ];
     }
     if (!this.environment.SLACK_CHANNEL && !this.environment.SLACK_CHANNEL_ID) {
-      return ['Missing Configuration: Please configure slackChannel by id (prop slackChannelId) or name (prop slackChannel)'];
+      return [
+        'Missing Configuration: Please configure slackChannel by id (prop slackChannelId) or name (prop slackChannel)',
+      ];
     }
     return [];
   }

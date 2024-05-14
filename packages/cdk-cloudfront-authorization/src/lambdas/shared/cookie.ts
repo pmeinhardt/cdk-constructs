@@ -68,8 +68,10 @@ export function extractAndParseCookies(
 }
 
 export const generateCookieHeaders = {
-  newTokens: (param: GenerateCookieHeadersParam): { key: string; value: string }[] => _generateCookieHeaders({ ...param, event: 'newTokens' }),
-  signOut: (param: GenerateCookieHeadersParam): { key: string; value: string }[] => _generateCookieHeaders({ ...param, event: 'signOut' }),
+  newTokens: (param: GenerateCookieHeadersParam): { key: string; value: string }[] =>
+    _generateCookieHeaders({ ...param, event: 'newTokens' }),
+  signOut: (param: GenerateCookieHeadersParam): { key: string; value: string }[] =>
+    _generateCookieHeaders({ ...param, event: 'signOut' }),
   refreshFailed: (param: GenerateCookieHeadersParam): { key: string; value: string }[] =>
     _generateCookieHeaders({ ...param, event: 'refreshFailed' }),
 };
@@ -107,11 +109,20 @@ function _generateCookieHeaders(
   // Construct object with the cookies
   const cookies = {
     [idTokenKey]: `${param.tokens.id_token}; ${withCookieDomain(param.domainName, param.cookieSettings.idToken)}`,
-    [accessTokenKey]: `${param.tokens.access_token}; ${withCookieDomain(param.domainName, param.cookieSettings.accessToken)}`,
-    [refreshTokenKey]: `${param.tokens.refresh_token}; ${withCookieDomain(param.domainName, param.cookieSettings.refreshToken)}`,
+    [accessTokenKey]: `${param.tokens.access_token}; ${withCookieDomain(
+      param.domainName,
+      param.cookieSettings.accessToken,
+    )}`,
+    [refreshTokenKey]: `${param.tokens.refresh_token}; ${withCookieDomain(
+      param.domainName,
+      param.cookieSettings.refreshToken,
+    )}`,
     [lastUserKey]: `${tokenUserName}; ${withCookieDomain(param.domainName, param.cookieSettings.idToken)}`,
     [scopeKey]: `${scopesString}; ${withCookieDomain(param.domainName, param.cookieSettings.accessToken)}`,
-    [userDataKey]: `${encodeURIComponent(userData)}; ${withCookieDomain(param.domainName, param.cookieSettings.idToken)}`,
+    [userDataKey]: `${encodeURIComponent(userData)}; ${withCookieDomain(
+      param.domainName,
+      param.cookieSettings.idToken,
+    )}`,
     'amplify-signin-with-hostedUI': `true; ${withCookieDomain(param.domainName, param.cookieSettings.accessToken)}`,
   };
 
@@ -147,7 +158,10 @@ function extractCookiesFromHeaders(headers: CloudFrontHeaders): Cookies {
   if (!headers['cookie']) {
     return {};
   }
-  const cookies = headers['cookie'].reduce((reduced, header) => Object.assign(reduced, parse(header.value)), {} as Cookies);
+  const cookies = headers['cookie'].reduce(
+    (reduced, header) => Object.assign(reduced, parse(header.value)),
+    {} as Cookies,
+  );
 
   return cookies;
 }

@@ -11,9 +11,11 @@ export const handler = async (event: DeleteStackEvent): Promise<void> => {
 
   const { stackId } = event;
 
-  await cfn.send(new DeleteStackCommand({
-    StackName: stackId,
-  }));
+  await cfn.send(
+    new DeleteStackCommand({
+      StackName: stackId,
+    }),
+  );
 
   console.log(`Stack ${stackId} deleted!`);
 };

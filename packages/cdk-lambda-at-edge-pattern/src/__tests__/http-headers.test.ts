@@ -109,5 +109,7 @@ test('blacklist', () => {
   };
 
   // THEN
-  expect(() => addHttpHeader()).toThrowError(/HttpHeader connection is blacklisted and can't be added by Lambda@Edge functions/);
+  expect(() => addHttpHeader()).toThrowError(
+    /HttpHeader connection is blacklisted and can't be added by Lambda@Edge functions/,
+  );
 });

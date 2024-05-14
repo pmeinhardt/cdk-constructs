@@ -112,7 +112,14 @@ export class EcsService extends Construct implements IConnectable, IEcsService, 
     serviceToken.addToRolePolicy(
       new PolicyStatement({
         effect: Effect.ALLOW,
-        actions: ['ecs:CreateService', 'ecs:UpdateService', 'ecs:DeleteService', 'ecs:DescribeServices', 'ecs:TagResource', 'ecs:UntagResource'],
+        actions: [
+          'ecs:CreateService',
+          'ecs:UpdateService',
+          'ecs:DeleteService',
+          'ecs:DescribeServices',
+          'ecs:TagResource',
+          'ecs:UntagResource',
+        ],
         resources: ['*'],
       }),
     );

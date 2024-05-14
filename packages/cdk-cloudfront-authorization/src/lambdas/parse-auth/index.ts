@@ -188,7 +188,10 @@ export const handler = async (event: CloudFrontRequestEvent): Promise<CloudFront
   }
 };
 
-function validateQueryStringAndCookies(props: { querystring: string; cookies: ReturnType<typeof extractAndParseCookies> }) {
+function validateQueryStringAndCookies(props: {
+  querystring: string;
+  cookies: ReturnType<typeof extractAndParseCookies>;
+}) {
   // Check if Cognito threw an Error. Cognito puts the error in the query string
   const { code, state, error: cognitoError, error_description } = parseQueryString(props.querystring);
   if (cognitoError) {
@@ -224,7 +227,9 @@ function validateQueryStringAndCookies(props: { querystring: string; cookies: Re
 
   if (!parsedState.nonce || !originalNonce || parsedState.nonce !== originalNonce) {
     if (!originalNonce) {
-      throw new RequiresConfirmationError("Your browser didn't send the nonce cookie along, but it is required for security (prevent CSRF).");
+      throw new RequiresConfirmationError(
+        "Your browser didn't send the nonce cookie along, but it is required for security (prevent CSRF).",
+      );
     }
     throw new RequiresConfirmationError(
       'Nonce mismatch. This can happen if you start multiple authentication attempts in parallel (e.g. in separate tabs)',
@@ -239,7 +244,9 @@ function validateQueryStringAndCookies(props: { querystring: string; cookies: Re
   const nonceTimestamp = parseInt(parsedState.nonce.slice(0, parsedState.nonce.indexOf('T')));
 
   if (timestampInSeconds() - nonceTimestamp > CONFIG.nonceMaxAge) {
-    throw new RequiresConfirmationError(`Nonce is too old (nonce is from ${new Date(nonceTimestamp * 1000).toISOString()})`);
+    throw new RequiresConfirmationError(
+      `Nonce is too old (nonce is from ${new Date(nonceTimestamp * 1000).toISOString()})`,
+    );
   }
 
   // Nonce should have the right signature: proving we were the ones generating it (and e.g. not malicious JS on a subdomain)

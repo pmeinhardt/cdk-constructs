@@ -62,7 +62,8 @@ export class Application extends Construct {
     this.domainName = props.domainName;
     this.domainZone = props.domainZone;
 
-    this.cloudFrontHashHeader = props.cloudFrontHashHeader ?? Buffer.from(`${stack.stackName}.${this.domainName}`).toString('base64');
+    this.cloudFrontHashHeader =
+      props.cloudFrontHashHeader ?? Buffer.from(`${stack.stackName}.${this.domainName}`).toString('base64');
     this.removalPolicy = props.removalPolicy;
 
     const cluster = new aws_ecs.Cluster(this, 'Cluster', {
@@ -108,7 +109,9 @@ export class Application extends Construct {
 
     this.listener.addAction('Cloudfornt', {
       action: aws_elasticloadbalancingv2.ListenerAction.forward([this.targetGroup]),
-      conditions: [aws_elasticloadbalancingv2.ListenerCondition.httpHeader(CUSTOM_HTTP_HEADER, [this.cloudFrontHashHeader])],
+      conditions: [
+        aws_elasticloadbalancingv2.ListenerCondition.httpHeader(CUSTOM_HTTP_HEADER, [this.cloudFrontHashHeader]),
+      ],
       priority: 100,
     });
 
@@ -171,7 +174,11 @@ export class Application extends Construct {
         origin,
         originRequestPolicy: new aws_cloudfront.OriginRequestPolicy(this, 'OriginRequestPolicy', {
           originRequestPolicyName: 'WordpressDefaultBehavior',
-          cookieBehavior: aws_cloudfront.OriginRequestCookieBehavior.allowList('comment_*', 'wordpress_*', 'wp-settings-*'),
+          cookieBehavior: aws_cloudfront.OriginRequestCookieBehavior.allowList(
+            'comment_*',
+            'wordpress_*',
+            'wp-settings-*',
+          ),
           headerBehavior: aws_cloudfront.OriginRequestHeaderBehavior.allowList(
             'Host',
             'CloudFront-Forwarded-Proto',
@@ -215,7 +222,10 @@ export class Application extends Construct {
     });
   }
 
-  public enableStaticContentOffload(domainName: string, certificate: aws_certificatemanager.ICertificate): StaticContentOffload {
+  public enableStaticContentOffload(
+    domainName: string,
+    certificate: aws_certificatemanager.ICertificate,
+  ): StaticContentOffload {
     const bucket = new aws_s3.Bucket(this, 'Bucket', {
       encryption: aws_s3.BucketEncryption.S3_MANAGED,
       versioned: true,

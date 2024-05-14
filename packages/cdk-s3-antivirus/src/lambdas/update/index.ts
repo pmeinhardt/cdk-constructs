@@ -12,6 +12,10 @@ export const handler = async (_event: ScheduledEvent, _context: Context): Promis
   const bucket = getEnv('DEFINITIONS_BUCKET');
 
   await antiVirus.downloadDefinitions(bucket);
-  await antiVirus.updateDefinitions([`DNSDatabaseInfo current.cvd.clamav.net`, `DatabaseMirror  database.clamav.net`, `CompressLocalDatabase yes`]);
+  await antiVirus.updateDefinitions([
+    `DNSDatabaseInfo current.cvd.clamav.net`,
+    `DatabaseMirror  database.clamav.net`,
+    `CompressLocalDatabase yes`,
+  ]);
   await antiVirus.uploadDefinitions(bucket);
 };

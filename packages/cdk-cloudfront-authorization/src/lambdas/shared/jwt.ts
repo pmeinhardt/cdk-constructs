@@ -13,7 +13,9 @@ async function getSigningKey(jwksUri: string, kid: string) {
     jwksRsa = jwksClient({ cache: true, rateLimit: true, jwksUri });
   }
   return new Promise<string>((resolve, reject) =>
-    jwksRsa.getSigningKey(kid, (err, jwk) => (err ? reject(err) : resolve((isRsaSigningKey(jwk) ? jwk.rsaPublicKey : jwk.publicKey) as string))),
+    jwksRsa.getSigningKey(kid, (err, jwk) =>
+      err ? reject(err) : resolve((isRsaSigningKey(jwk) ? jwk.rsaPublicKey : jwk.publicKey) as string),
+    ),
   );
 }
 
@@ -38,7 +40,9 @@ export async function validate(jwtToken: string, jwksUri: string, issuer: string
     issuer,
     ignoreExpiration: false,
   };
-  return new Promise((resolve, reject) => verify(jwtToken, jwk, verificationOptions, (err) => (err ? reject(err) : resolve())));
+  return new Promise((resolve, reject) =>
+    verify(jwtToken, jwk, verificationOptions, (err) => (err ? reject(err) : resolve())),
+  );
 }
 
 export interface CognitoIdTokenPayload {

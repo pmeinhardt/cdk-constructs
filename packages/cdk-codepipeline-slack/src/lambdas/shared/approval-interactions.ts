@@ -96,22 +96,26 @@ const handleDialogSubmission = async (payload: DialogPayload): Promise<void> => 
   const { ts, approval } = JSON.parse(state) as ApprovalDialogState;
   const { token, pipelineName, stageName, actionName } = approval;
 
-  await pipeline.send(new PutApprovalResultCommand({
-    token,
-    pipelineName,
-    stageName,
-    actionName,
-    result: {
-      status: callback_id === 'approve_dialog' ? 'Approved' : 'Rejected',
-      summary: `[name=${user.name} id=${user.id}]: ${comment})`,
-    },
-  }));
+  await pipeline.send(
+    new PutApprovalResultCommand({
+      token,
+      pipelineName,
+      stageName,
+      actionName,
+      result: {
+        status: callback_id === 'approve_dialog' ? 'Approved' : 'Rejected',
+        summary: `[name=${user.name} id=${user.id}]: ${comment})`,
+      },
+    }),
+  );
 
   const messageBuilder = ApprovalMessageBuilder.fromApprovalRequest(approval);
 
   messageBuilder.removeActions();
 
-  messageBuilder.updateStatus(callback_id === 'approve_dialog' ? `:white_check_mark: Approved by ${user.name}` : `:x: Rejected by ${user.name}`);
+  messageBuilder.updateStatus(
+    callback_id === 'approve_dialog' ? `:white_check_mark: Approved by ${user.name}` : `:x: Rejected by ${user.name}`,
+  );
 
   messageBuilder.attachComment(comment);
 

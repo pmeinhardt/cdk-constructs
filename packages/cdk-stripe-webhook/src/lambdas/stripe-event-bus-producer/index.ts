@@ -5,8 +5,12 @@ import { getEnv } from 'get-env-or-die';
 import Stripe from 'stripe';
 
 const eventBridge = new EventBridgeClient();
-const endpointSecretKey = new SecretKey(getEnv('ENDPOINT_SECRET_STRING'), { configuration: { maxAttempts: 5 } });
-const apiSecretKey = new SecretKey(getEnv('SECRET_KEY_STRING'), { configuration: { maxAttempts: 5 } });
+const endpointSecretKey = new SecretKey(getEnv('ENDPOINT_SECRET_STRING'), {
+  configuration: { maxAttempts: 5 },
+});
+const apiSecretKey = new SecretKey(getEnv('SECRET_KEY_STRING'), {
+  configuration: { maxAttempts: 5 },
+});
 
 export const handler: APIGatewayProxyHandler = async (event) => {
   try {

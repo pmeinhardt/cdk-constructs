@@ -36,7 +36,8 @@ beforeEach(() => {
       'content-security-policy': [
         {
           key: 'Content-Security-Policy',
-          value: "default-src 'none'; img-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; object-src 'none'; connect-src 'self'",
+          value:
+            "default-src 'none'; img-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; object-src 'none'; connect-src 'self'",
         },
       ],
       'strict-transport-security': [

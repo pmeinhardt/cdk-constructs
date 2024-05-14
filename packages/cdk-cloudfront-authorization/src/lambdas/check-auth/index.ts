@@ -7,7 +7,9 @@ import { decodeIdToken, validate } from '../shared/jwt';
 
 let CONFIG: Config;
 
-export const handler = async (event: CloudFrontRequestEvent): Promise<CloudFrontResponseResult | CloudFrontRequestResult> => {
+export const handler = async (
+  event: CloudFrontRequestEvent,
+): Promise<CloudFrontResponseResult | CloudFrontRequestResult> => {
   if (!CONFIG) {
     CONFIG = getConfig();
   }
@@ -51,7 +53,10 @@ export const handler = async (event: CloudFrontRequestEvent): Promise<CloudFront
           location: [
             {
               key: 'location',
-              value: `https://${domainName}${CONFIG.redirectPathAuthRefresh}?${stringifyQueryString({ requestedUri, nonce })}`,
+              value: `https://${domainName}${CONFIG.redirectPathAuthRefresh}?${stringifyQueryString({
+                requestedUri,
+                nonce,
+              })}`,
             },
           ],
           'set-cookie': [
@@ -61,9 +66,9 @@ export const handler = async (event: CloudFrontRequestEvent): Promise<CloudFront
             },
             {
               key: 'set-cookie',
-              value: `spa-auth-edge-nonce-hmac=${encodeURIComponent(sign(nonce, CONFIG.nonceSigningSecret, CONFIG.nonceLength))}; ${
-                CONFIG.cookieSettings.nonce
-              }`,
+              value: `spa-auth-edge-nonce-hmac=${encodeURIComponent(
+                sign(nonce, CONFIG.nonceSigningSecret, CONFIG.nonceLength),
+              )}; ${CONFIG.cookieSettings.nonce}`,
             },
           ],
           ...CONFIG.cloudFrontHeaders,
@@ -149,7 +154,9 @@ export const handler = async (event: CloudFrontRequestEvent): Promise<CloudFront
 
 const generatePkceVerifier = (pkce?: string): { pkce: string; pkceHash: string } => {
   if (!pkce) {
-    pkce = [...new Array(CONFIG.pkceLength)].map(() => randomChoiceFromIndexable(CONFIG.secretAllowedCharacters)).join('');
+    pkce = [...new Array(CONFIG.pkceLength)]
+      .map(() => randomChoiceFromIndexable(CONFIG.secretAllowedCharacters))
+      .join('');
   }
 
   const verifier = {
@@ -163,7 +170,9 @@ const generatePkceVerifier = (pkce?: string): { pkce: string; pkceHash: string }
 };
 
 const generateNonce = (): string => {
-  const randomString = [...new Array(CONFIG.nonceLength)].map(() => randomChoiceFromIndexable(CONFIG.secretAllowedCharacters)).join('');
+  const randomString = [...new Array(CONFIG.nonceLength)]
+    .map(() => randomChoiceFromIndexable(CONFIG.secretAllowedCharacters))
+    .join('');
   const nonce = `${timestampInSeconds()}T${randomString}`;
   CONFIG.logger.debug('Generated new nonce:', nonce);
   return nonce;

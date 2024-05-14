@@ -33,7 +33,7 @@ export class Account {
 
       const { AccountAliases: aliases } = await iam.send(new ListAccountAliasesCommand());
 
-      accountAlias = aliases![0];
+      accountAlias = aliases ? aliases[0] : '';
     }
 
     return accountAlias;

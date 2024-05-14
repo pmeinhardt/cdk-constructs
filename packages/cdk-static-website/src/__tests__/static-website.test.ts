@@ -23,7 +23,11 @@ test('lambda at edge', () => {
     edgeLambdas: [
       {
         eventType: aws_cloudfront.LambdaEdgeEventType.ORIGIN_REQUEST,
-        functionVersion: aws_lambda.Version.fromVersionArn(stack, 'LambdaEdge', 'arn:aws:lambda:us-east-1:123456789012:function:my-function:1'),
+        functionVersion: aws_lambda.Version.fromVersionArn(
+          stack,
+          'LambdaEdge',
+          'arn:aws:lambda:us-east-1:123456789012:function:my-function:1',
+        ),
       },
     ],
   });

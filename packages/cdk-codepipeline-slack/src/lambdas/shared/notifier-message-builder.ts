@@ -28,9 +28,15 @@ export class NotifierMessageBuilder extends MessageBuilder {
     const pipelineName = pipelineEvent.detail.pipeline;
     const ts = existingMessage ? existingMessage.ts : undefined;
 
-    const pipelineStatusText = NotifierMessageBuilder.getPipelineStatusText(pipelineState, pipelineEvent.detail['execution-id']);
+    const pipelineStatusText = NotifierMessageBuilder.getPipelineStatusText(
+      pipelineState,
+      pipelineEvent.detail['execution-id'],
+    );
 
-    const actionStatusText = NotifierMessageBuilder.getBuildActionStatusText(pipelineState, pipelineEvent.detail['execution-id']);
+    const actionStatusText = NotifierMessageBuilder.getBuildActionStatusText(
+      pipelineState,
+      pipelineEvent.detail['execution-id'],
+    );
 
     const revisonInfo = NotifierMessageBuilder.getRevisionInfo(pipelineExecution);
 
@@ -84,8 +90,14 @@ export class NotifierMessageBuilder extends MessageBuilder {
     let pipelineStatusText = '';
     if (pipelineState.stageStates) {
       pipelineState.stageStates.forEach((stageState) => {
-        if (stageState?.latestExecution?.pipelineExecutionId === executionId && stageState.stageName && stageState.latestExecution) {
-          pipelineStatusText = `${pipelineStatusText} ${stageState.stageName}: ${getPipelineStateIcon(stageState.latestExecution.status)}`;
+        if (
+          stageState?.latestExecution?.pipelineExecutionId === executionId &&
+          stageState.stageName &&
+          stageState.latestExecution
+        ) {
+          pipelineStatusText = `${pipelineStatusText} ${stageState.stageName}: ${getPipelineStateIcon(
+            stageState.latestExecution.status,
+          )}`;
         }
       });
     }

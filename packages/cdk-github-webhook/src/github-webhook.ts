@@ -32,7 +32,8 @@ export class GithubWebhook extends Construct {
   constructor(scope: Construct, id: string, props: GithubWebhookProps) {
     super(scope, id);
 
-    const githubApiToken = typeof props.githubApiToken === 'string' ? SecretKey.fromPlainText(props.githubApiToken) : props.githubApiToken;
+    const githubApiToken =
+      typeof props.githubApiToken === 'string' ? SecretKey.fromPlainText(props.githubApiToken) : props.githubApiToken;
 
     const handler = new aws_lambda.SingletonFunction(this, 'CustomResourceHandler', {
       uuid: '83CBF3EB-7B62-44F2-8C67-8441E4C1232E',

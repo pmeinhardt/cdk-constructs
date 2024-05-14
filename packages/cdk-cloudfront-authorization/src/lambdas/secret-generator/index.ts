@@ -12,7 +12,8 @@ export const handler: CloudFormationCustomResourceHandler = async (event) => {
 
   const { LogicalResourceId, RequestId, StackId, ResponseURL, ResourceProperties } = event;
 
-  const { Length = 16, AllowedCharacters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~' } = ResourceProperties;
+  const { Length = 16, AllowedCharacters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~' } =
+    ResourceProperties;
 
   let response: CloudFormationCustomResourceResponse;
   try {
@@ -37,8 +38,8 @@ export const handler: CloudFormationCustomResourceHandler = async (event) => {
     response = {
       LogicalResourceId,
       PhysicalResourceId:
-        (event as CloudFormationCustomResourceDeleteEvent | CloudFormationCustomResourceUpdateEvent).PhysicalResourceId ||
-        `failed-to-create-${Date.now()}`,
+        (event as CloudFormationCustomResourceDeleteEvent | CloudFormationCustomResourceUpdateEvent)
+          .PhysicalResourceId || `failed-to-create-${Date.now()}`,
       Status: 'FAILED',
       Reason: err instanceof Error ? err.stack || err.message : 'Error',
       RequestId,

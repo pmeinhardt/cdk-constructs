@@ -25,7 +25,9 @@ const handleCreate: OnCreateHandler = async (event, _): Promise<ResourceHandlerR
     CloudFormationCustomResourceEventCommon['ResourceProperties']
   >(event.ResourceProperties);
 
-  const secretKey = new SecretKey(secretKeyString, { configuration: { maxAttempts: 5 } });
+  const secretKey = new SecretKey(secretKeyString, {
+    configuration: { maxAttempts: 5 },
+  });
   const value = await secretKey.getValue();
 
   const stripe = new Stripe(value, { apiVersion: '2020-08-27' });
@@ -42,7 +44,9 @@ const handleCreate: OnCreateHandler = async (event, _): Promise<ResourceHandlerR
   );
 
   if (endpointSecretStoreString && data.secret) {
-    const secretKeyStore = new SecretKeyStore(endpointSecretStoreString, { configuration: { maxAttempts: 5 } });
+    const secretKeyStore = new SecretKeyStore(endpointSecretStoreString, {
+      configuration: { maxAttempts: 5 },
+    });
     await secretKeyStore.putSecret(data.secret);
     delete data.secret;
   }
@@ -56,11 +60,14 @@ const handleCreate: OnCreateHandler = async (event, _): Promise<ResourceHandlerR
 };
 
 const handleUpdate: OnUpdateHandler = async (event, _): Promise<ResourceHandlerReturn> => {
-  const { secretKeyString, url, events, description } = camelizeKeys<WebhookProps, CloudFormationCustomResourceEventCommon['ResourceProperties']>(
-    event.ResourceProperties,
-  );
+  const { secretKeyString, url, events, description } = camelizeKeys<
+    WebhookProps,
+    CloudFormationCustomResourceEventCommon['ResourceProperties']
+  >(event.ResourceProperties);
 
-  const secretKey = new SecretKey(secretKeyString, { configuration: { maxAttempts: 5 } });
+  const secretKey = new SecretKey(secretKeyString, {
+    configuration: { maxAttempts: 5 },
+  });
   const value = await secretKey.getValue();
 
   const webhookId = event.PhysicalResourceId;
@@ -90,9 +97,13 @@ const handleUpdate: OnUpdateHandler = async (event, _): Promise<ResourceHandlerR
 };
 
 const handleDelete: OnDeleteHandler = async (event, _): Promise<void> => {
-  const { secretKeyString } = camelizeKeys<WebhookProps, CloudFormationCustomResourceEventCommon['ResourceProperties']>(event.ResourceProperties);
+  const { secretKeyString } = camelizeKeys<WebhookProps, CloudFormationCustomResourceEventCommon['ResourceProperties']>(
+    event.ResourceProperties,
+  );
 
-  const secretKey = new SecretKey(secretKeyString, { configuration: { maxAttempts: 5 } });
+  const secretKey = new SecretKey(secretKeyString, {
+    configuration: { maxAttempts: 5 },
+  });
   const value = await secretKey.getValue();
 
   const webhookId = event.PhysicalResourceId;

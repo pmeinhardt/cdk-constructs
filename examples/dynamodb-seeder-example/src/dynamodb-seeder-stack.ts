@@ -1,6 +1,13 @@
 import * as path from 'path';
 import { DynamoDBSeeder, Seeds } from '@cloudcomponents/cdk-dynamodb-seeder';
-import { Stack, StackProps, RemovalPolicy, aws_dynamodb as dynamodb, aws_s3 as s3, aws_s3_deployment as s3_deployment } from 'aws-cdk-lib';
+import {
+  Stack,
+  StackProps,
+  RemovalPolicy,
+  aws_dynamodb as dynamodb,
+  aws_s3 as s3,
+  aws_s3_deployment as s3_deployment,
+} from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 
 export class DynamoDBSeederStack extends Stack {

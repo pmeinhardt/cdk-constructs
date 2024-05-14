@@ -1,5 +1,12 @@
 import { BuildSpec, LinuxBuildImage, PipelineProject, ComputeType } from 'aws-cdk-lib/aws-codebuild';
-import { ActionBindOptions, ActionCategory, ActionConfig, Artifact, CommonAwsActionProps, IStage } from 'aws-cdk-lib/aws-codepipeline';
+import {
+  ActionBindOptions,
+  ActionCategory,
+  ActionConfig,
+  Artifact,
+  CommonAwsActionProps,
+  IStage,
+} from 'aws-cdk-lib/aws-codepipeline';
 import { Action } from 'aws-cdk-lib/aws-codepipeline-actions';
 import { PolicyStatement } from 'aws-cdk-lib/aws-iam';
 import { Construct } from 'constructs';
@@ -72,7 +79,10 @@ export class CodePipelineDockerfileLinterAction extends Action {
             commands: ['echo Scan started on `date`', `result=$(${hadolint} -f json Dockerfile)`],
           },
           post_build: {
-            commands: ['if [ "$result" != "[]" ]; then echo $result | jq .; else echo "Awesome! No findings!"; fi', 'echo Scan completed on `date`'],
+            commands: [
+              'if [ "$result" != "[]" ]; then echo $result | jq .; else echo "Awesome! No findings!"; fi',
+              'echo Scan completed on `date`',
+            ],
           },
         },
       }),

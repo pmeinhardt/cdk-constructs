@@ -85,9 +85,10 @@ const handleUpdate: OnUpdateHandler = async (event): Promise<ResourceHandlerRetu
 };
 
 const handleDelete: OnDeleteHandler = async (event): Promise<void> => {
-  const { accessTokenString, spaceId } = camelizeKeys<WebhookProps, CloudFormationCustomResourceEventCommon['ResourceProperties']>(
-    event.ResourceProperties,
-  );
+  const { accessTokenString, spaceId } = camelizeKeys<
+    WebhookProps,
+    CloudFormationCustomResourceEventCommon['ResourceProperties']
+  >(event.ResourceProperties);
 
   const secretKey = new SecretKey(accessTokenString);
   const accessToken = await secretKey.getValue();

@@ -8,7 +8,11 @@ import 'jest-cdk-snapshot';
 import { ApprovalRuleTemplateRepositoryAssociation } from '../approval-rule-template-repository-association';
 
 jest.mock('../directories', () => ({
-  approvalRuleTemplateRepositoryAssociationDir: path.join(__dirname, 'mocks', 'approval-rule-template-repository-association'),
+  approvalRuleTemplateRepositoryAssociationDir: path.join(
+    __dirname,
+    'mocks',
+    'approval-rule-template-repository-association',
+  ),
 }));
 
 test('default setup', (): void => {
@@ -33,10 +37,14 @@ test('onOverridden', (): void => {
     repositoryName: 'repo',
   });
 
-  const ruleAsscociation = new ApprovalRuleTemplateRepositoryAssociation(stack, 'ApprovalRuleTemplateRepositoryAssociation', {
-    approvalRuleTemplateName: 'name',
-    repository,
-  });
+  const ruleAsscociation = new ApprovalRuleTemplateRepositoryAssociation(
+    stack,
+    'ApprovalRuleTemplateRepositoryAssociation',
+    {
+      approvalRuleTemplateName: 'name',
+      repository,
+    },
+  );
 
   const topic = new Topic(stack, 'Topic');
 

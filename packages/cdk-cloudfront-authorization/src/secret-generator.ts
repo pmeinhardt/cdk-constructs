@@ -25,7 +25,8 @@ export class SecretGenerator extends Construct {
       resourceType: 'Custom::GenerateSecret',
       properties: {
         Length: props.length ?? 16,
-        AllowedCharacters: props.allowedCharacters ?? 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~',
+        AllowedCharacters:
+          props.allowedCharacters ?? 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~',
       },
     });
 

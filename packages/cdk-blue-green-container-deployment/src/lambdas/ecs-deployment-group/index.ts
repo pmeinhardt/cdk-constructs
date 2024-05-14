@@ -8,10 +8,7 @@ import {
   UntagResourceCommand,
   UpdateDeploymentGroupCommand,
 } from '@aws-sdk/client-codedeploy';
-import type {
-  CloudFormationCustomResourceEvent,
-  CloudFormationCustomResourceUpdateEvent,
-} from 'aws-lambda';
+import type { CloudFormationCustomResourceEvent, CloudFormationCustomResourceUpdateEvent } from 'aws-lambda';
 import {
   customResourceHelper,
   OnCreateHandler,
@@ -52,23 +49,15 @@ const codeDeploy = new CodeDeployClient();
 const getProperties = (
   props:
     | CloudFormationCustomResourceEvent['ResourceProperties']
-    | CloudFormationCustomResourceUpdateEvent['OldResourceProperties']
+    | CloudFormationCustomResourceUpdateEvent['OldResourceProperties'],
 ): EcsDeploymentGroupProps => ({
   applicationName: props.ApplicationName,
   deploymentGroupName: props.DeploymentGroupName,
   serviceRoleArn: props.ServiceRoleArn,
-  ecsServices: props.EcsServices.map(
-    ({
-      ClusterName,
-      ServiceName,
-    }: {
-      ClusterName: string;
-      ServiceName: string;
-    }) => ({
-      clusterName: ClusterName,
-      serviceName: ServiceName,
-    })
-  ),
+  ecsServices: props.EcsServices.map(({ ClusterName, ServiceName }: { ClusterName: string; ServiceName: string }) => ({
+    clusterName: ClusterName,
+    serviceName: ServiceName,
+  })),
   targetGroupNames: props.TargetGroupNames,
   prodTrafficListenerArn: props.ProdTrafficListenerArn,
   testTrafficListenerArn: props.TestTrafficListenerArn,
@@ -78,10 +67,7 @@ const getProperties = (
   tags: props.Tags ?? [],
 });
 
-export const handleCreate: OnCreateHandler = async (
-  event,
-  context
-): Promise<ResourceHandlerReturn> => {
+export const handleCreate: OnCreateHandler = async (event, context): Promise<ResourceHandlerReturn> => {
   const {
     applicationName,
     deploymentGroupName,
@@ -134,34 +120,26 @@ export const handleCreate: OnCreateHandler = async (
         deploymentType: 'BLUE_GREEN',
         deploymentOption: 'WITH_TRAFFIC_CONTROL',
       },
-      deploymentConfigName:
-        deploymentConfigName ?? 'CodeDeployDefault.ECSAllAtOnce',
+      deploymentConfigName: deploymentConfigName ?? 'CodeDeployDefault.ECSAllAtOnce',
       tags,
-    })
+    }),
   );
 
   return {
     physicalResourceId: deploymentGroupName,
     responseData: {
-      Arn: arnForDeploymentGroup(
-        applicationName,
-        deploymentGroupName,
-        context.invokedFunctionArn
-      ),
+      Arn: arnForDeploymentGroup(applicationName, deploymentGroupName, context.invokedFunctionArn),
     },
   };
 };
 
-export const handleUpdate: OnUpdateHandler = async (
-  event,
-  context
-): Promise<ResourceHandlerReturn> => {
+export const handleUpdate: OnUpdateHandler = async (event, context): Promise<ResourceHandlerReturn> => {
   const newProps = getProperties(event.ResourceProperties);
   const oldProps = getProperties(event.OldResourceProperties);
   const deploymentGroupArn = arnForDeploymentGroup(
     newProps.applicationName,
     newProps.deploymentGroupName,
-    context.invokedFunctionArn
+    context.invokedFunctionArn,
   );
 
   await codeDeploy.send(
@@ -199,7 +177,7 @@ export const handleUpdate: OnUpdateHandler = async (
         },
       },
       deploymentConfigName: newProps.deploymentConfigName,
-    })
+    }),
   );
 
   const newTagKeys: string[] = newProps.tags.map((t: Tag) => t.Key as string);
@@ -212,7 +190,7 @@ export const handleUpdate: OnUpdateHandler = async (
       new UntagResourceCommand({
         ResourceArn: deploymentGroupArn,
         TagKeys: removableTagKeys,
-      })
+      }),
     );
   }
 
@@ -221,7 +199,7 @@ export const handleUpdate: OnUpdateHandler = async (
       new TagResourceCommand({
         ResourceArn: deploymentGroupArn,
         Tags: newProps.tags,
-      })
+      }),
     );
   }
 
@@ -234,33 +212,20 @@ export const handleUpdate: OnUpdateHandler = async (
 };
 
 const handleDelete: OnDeleteHandler = async (event): Promise<void> => {
-  const { applicationName, deploymentGroupName } = getProperties(
-    event.ResourceProperties
-  );
+  const { applicationName, deploymentGroupName } = getProperties(event.ResourceProperties);
 
   await codeDeploy.send(
     new DeleteDeploymentGroupCommand({
       applicationName,
       deploymentGroupName,
-    })
+    }),
   );
 };
 
 const extractArnParts = (invokedFunctionArn: string): ArnParts => {
-  const matcher =
-    /arn:(?<partition>\w+):lambda:(?<region>[\w-]+):(?<accountId>\d+):.*/.exec(
-      invokedFunctionArn
-    );
-  if (
-    !matcher ||
-    !matcher.groups ||
-    !matcher.groups.partition ||
-    !matcher.groups.region ||
-    !matcher.groups.accountId
-  ) {
-    throw new Error(
-      `Unable to extract necessary parts from function name. (${invokedFunctionArn}).`
-    );
+  const matcher = /arn:(?<partition>\w+):lambda:(?<region>[\w-]+):(?<accountId>\d+):.*/.exec(invokedFunctionArn);
+  if (!matcher || !matcher.groups || !matcher.groups.partition || !matcher.groups.region || !matcher.groups.accountId) {
+    throw new Error(`Unable to extract necessary parts from function name. (${invokedFunctionArn}).`);
   }
   return {
     awsPartition: matcher.groups.partition,
@@ -272,7 +237,7 @@ const extractArnParts = (invokedFunctionArn: string): ArnParts => {
 const arnForDeploymentGroup = (
   applicationName: string,
   deploymentGroupName: string,
-  invokedFunctionArn: string
+  invokedFunctionArn: string,
 ): string => {
   const arnParts = extractArnParts(invokedFunctionArn);
   return `arn:${arnParts.awsPartition}:codedeploy:${arnParts.awsRegion}:${arnParts.awsAccountId}:deploymentgroup:${applicationName}/${deploymentGroupName}`;
@@ -283,5 +248,5 @@ export const handler = customResourceHelper(
     onCreate: handleCreate,
     onUpdate: handleUpdate,
     onDelete: handleDelete,
-  })
+  }),
 );

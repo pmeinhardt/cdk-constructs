@@ -16,7 +16,12 @@ axiosRetry(AXIOS_INSTANCE, {
   retryDelay: (retryCount) => (retryCount >= 2 ? 25 * (Math.pow(2, retryCount) + Math.random() * retryCount) : 0),
 });
 
-export async function httpPostWithRetry<R>(url: string, data: unknown, config: AxiosRequestConfig, logger: Logger): Promise<AxiosResponse<R>> {
+export async function httpPostWithRetry<R>(
+  url: string,
+  data: unknown,
+  config: AxiosRequestConfig,
+  logger: Logger,
+): Promise<AxiosResponse<R>> {
   try {
     return await AXIOS_INSTANCE.post(url, data, config);
   } catch (err) {

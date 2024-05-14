@@ -31,7 +31,10 @@ test('list of approvalPoolMembers', (): void => {
     template: {
       approvers: {
         numberOfApprovalsNeeded: 2,
-        approvalPoolMembers: ['arn:aws:sts::123456789012:assumed-role/CodeCommitReview/*', 'arn:aws:sts::123456789012:assumed-role/LeadDeveloper/*'],
+        approvalPoolMembers: [
+          'arn:aws:sts::123456789012:assumed-role/CodeCommitReview/*',
+          'arn:aws:sts::123456789012:assumed-role/LeadDeveloper/*',
+        ],
       },
     },
   });

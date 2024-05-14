@@ -1,6 +1,12 @@
-import { GetObjectCommand, ListObjectsV2Command, PutObjectCommand, PutObjectTaggingCommand, S3Client } from '@aws-sdk/client-s3';
 import * as os from 'os';
 import * as path from 'path';
+import {
+  GetObjectCommand,
+  ListObjectsV2Command,
+  PutObjectCommand,
+  PutObjectTaggingCommand,
+  S3Client,
+} from '@aws-sdk/client-s3';
 import execa from 'execa';
 import * as fs from 'fs-extra';
 import globby from 'globby';
@@ -103,9 +109,11 @@ export class AntiVirus {
   }
 
   public async downloadDefinitions(bucket: string): Promise<void> {
-    const { Contents: contents } = await this.s3.send(new ListObjectsV2Command({
-      Bucket: bucket,
-    }));
+    const { Contents: contents } = await this.s3.send(
+      new ListObjectsV2Command({
+        Bucket: bucket,
+      }),
+    );
 
     if (!contents) return;
 
@@ -118,18 +126,20 @@ export class AntiVirus {
   }
 
   private async updateScanStatus(bucket: string, key: string, status: ScanStatus): Promise<string | undefined> {
-    const { VersionId: versionId } = await this.s3.send(new PutObjectTaggingCommand({
-      Bucket: bucket,
-      Key: key,
-      Tagging: {
-        TagSet: [
-          {
-            Key: this.options.scanStatusTagName,
-            Value: status,
-          },
-        ],
-      },
-    }));
+    const { VersionId: versionId } = await this.s3.send(
+      new PutObjectTaggingCommand({
+        Bucket: bucket,
+        Key: key,
+        Tagging: {
+          TagSet: [
+            {
+              Key: this.options.scanStatusTagName,
+              Value: status,
+            },
+          ],
+        },
+      }),
+    );
 
     return versionId;
   }
@@ -139,25 +149,27 @@ export class AntiVirus {
   }
 
   private async uploadFile(bucket: string, key: string, path: string): Promise<void> {
-    await this.s3.send(new PutObjectCommand({
-      Bucket: bucket,
-      Key: key,
-      Body: fs.createReadStream(path),
-    }));
+    await this.s3.send(
+      new PutObjectCommand({
+        Bucket: bucket,
+        Key: key,
+        Body: fs.createReadStream(path),
+      }),
+    );
   }
 
   private async downloadFile(bucket: string, key: string, path: string): Promise<void> {
     const ws = fs.createWriteStream(path);
 
-    return new Promise(async (resolve, reject) => {
-      const response = await this.s3.send(new GetObjectCommand({
+    const response = await this.s3.send(
+      new GetObjectCommand({
         Bucket: bucket,
         Key: key,
-      }));
+      }),
+    );
 
-      response.Body?.on('end', resolve)
-        .on('error', reject)
-        .pipe(ws);
+    return new Promise((resolve, reject) => {
+      response.Body?.on('end', resolve).on('error', reject).pipe(ws);
     });
   }
 

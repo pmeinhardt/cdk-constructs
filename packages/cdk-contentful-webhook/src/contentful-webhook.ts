@@ -16,7 +16,8 @@ export class ContentfulWebhook extends Construct {
   public constructor(scope: Construct, id: string, props: ContentfulWebhookProps) {
     super(scope, id);
 
-    const accessToken = typeof props.accessToken === 'string' ? SecretKey.fromPlainText(props.accessToken) : props.accessToken;
+    const accessToken =
+      typeof props.accessToken === 'string' ? SecretKey.fromPlainText(props.accessToken) : props.accessToken;
 
     const handler = new aws_lambda.SingletonFunction(this, 'CustomResourceHandler', {
       uuid: '91f2075f-b950-4743-a66b-ee0f6febf50d',

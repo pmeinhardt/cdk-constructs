@@ -1,6 +1,12 @@
 import { Stack } from 'aws-cdk-lib';
 import { IRepository } from 'aws-cdk-lib/aws-codecommit';
-import { ActionCategory, CommonAwsActionProps, IStage, ActionBindOptions, ActionConfig } from 'aws-cdk-lib/aws-codepipeline';
+import {
+  ActionCategory,
+  CommonAwsActionProps,
+  IStage,
+  ActionBindOptions,
+  ActionConfig,
+} from 'aws-cdk-lib/aws-codepipeline';
 import { Action } from 'aws-cdk-lib/aws-codepipeline-actions';
 import { PolicyStatement, IRole } from 'aws-cdk-lib/aws-iam';
 import { Construct } from 'constructs';

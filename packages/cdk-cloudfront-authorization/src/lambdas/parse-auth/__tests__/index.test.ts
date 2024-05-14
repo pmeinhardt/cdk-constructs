@@ -2,7 +2,17 @@ import { stringify, parse } from 'querystring';
 import { invokeLambda, createEvent } from 'aws-local-testing-library';
 
 import { handler } from '..';
-import { getConfig, Logger, LogLevel, httpPostWithRetry, extractAndParseCookies, sign, generateCookieHeaders, urlSafe, validate } from '../../shared';
+import {
+  getConfig,
+  Logger,
+  LogLevel,
+  httpPostWithRetry,
+  extractAndParseCookies,
+  sign,
+  generateCookieHeaders,
+  urlSafe,
+  validate,
+} from '../../shared';
 
 jest.mock('querystring');
 jest.mock('../../shared/config');
@@ -38,7 +48,8 @@ beforeEach(() => {
       'content-security-policy': [
         {
           key: 'Content-Security-Policy',
-          value: "default-src 'none'; img-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; object-src 'none'; connect-src 'self'",
+          value:
+            "default-src 'none'; img-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; object-src 'none'; connect-src 'self'",
         },
       ],
       'strict-transport-security': [

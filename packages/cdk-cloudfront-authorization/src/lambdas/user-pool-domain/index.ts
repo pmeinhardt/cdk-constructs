@@ -12,9 +12,11 @@ const COGNITO_CLIENT = new CognitoIdentityProvider({
 });
 
 async function ensureCognitoUserPoolDomain(userPoolId: string): Promise<string> {
-  const { UserPool: userPool } = await COGNITO_CLIENT.send(new DescribeUserPoolCommand({
-    UserPoolId: userPoolId,
-  }));
+  const { UserPool: userPool } = await COGNITO_CLIENT.send(
+    new DescribeUserPoolCommand({
+      UserPoolId: userPoolId,
+    }),
+  );
 
   if (!userPool) {
     throw new Error(`User pool ${userPoolId} not found.`);
@@ -32,12 +34,15 @@ async function ensureCognitoUserPoolDomain(userPoolId: string): Promise<string> 
 export const handler: CloudFormationCustomResourceHandler = async (event) => {
   const { LogicalResourceId, RequestId, RequestType, StackId, ResponseURL, ResourceProperties } = event;
 
-  const { PhysicalResourceId: physicalResourceId } = event as CloudFormationCustomResourceDeleteEvent | CloudFormationCustomResourceUpdateEvent;
+  const { PhysicalResourceId: physicalResourceId } = event as
+    | CloudFormationCustomResourceDeleteEvent
+    | CloudFormationCustomResourceUpdateEvent;
 
   let response: CloudFormationCustomResourceResponse;
 
   try {
-    const domainName = RequestType !== 'Delete' ? await ensureCognitoUserPoolDomain(ResourceProperties.UserPoolId as string) : undefined;
+    const domainName =
+      RequestType !== 'Delete' ? await ensureCognitoUserPoolDomain(ResourceProperties.UserPoolId as string) : undefined;
 
     response = {
       LogicalResourceId,

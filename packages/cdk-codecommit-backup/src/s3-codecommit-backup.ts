@@ -55,7 +55,10 @@ export class S3CodeCommitBackup extends Construct {
         },
         phases: {
           pre_build: {
-            commands: [`echo "[===== Clone repository: ${repositoryName} =====]"`, `git clone "${repositoryCloneUrlHttp}"`],
+            commands: [
+              `echo "[===== Clone repository: ${repositoryName} =====]"`,
+              `git clone "${repositoryCloneUrlHttp}"`,
+            ],
           },
           build: {
             commands: [
@@ -75,7 +78,13 @@ export class S3CodeCommitBackup extends Construct {
     this.backupProject.addToRolePolicy(
       new PolicyStatement({
         resources: [repositoryArn],
-        actions: ['codecommit:BatchGet*', 'codecommit:Get*', 'codecommit:Describe*', 'codecommit:List*', 'codecommit:GitPull'],
+        actions: [
+          'codecommit:BatchGet*',
+          'codecommit:Get*',
+          'codecommit:Describe*',
+          'codecommit:List*',
+          'codecommit:GitPull',
+        ],
       }),
     );
 

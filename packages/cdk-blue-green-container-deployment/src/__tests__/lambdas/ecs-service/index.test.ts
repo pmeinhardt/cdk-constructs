@@ -58,8 +58,7 @@ describe('createHandler', () => {
 
     ecsClientMock.on(CreateServiceCommand, requestParams).resolvesOnce({
       service: {
-        serviceArn:
-          'arn:aws:ecs:us-east-1:012345678910:service/MyCluster/MyService',
+        serviceArn: 'arn:aws:ecs:us-east-1:012345678910:service/MyCluster/MyService',
         serviceName: 'MyService',
       },
     });
@@ -77,7 +76,7 @@ describe('createHandler', () => {
         },
       },
       defaultContext,
-      defaultLogger
+      defaultLogger,
     );
 
     const ecsClientCalls = ecsClientMock.calls();
@@ -85,8 +84,7 @@ describe('createHandler', () => {
     expect(ecsClientCalls).toHaveLength(1);
 
     expect(response).toEqual({
-      physicalResourceId:
-        'arn:aws:ecs:us-east-1:012345678910:service/MyCluster/MyService',
+      physicalResourceId: 'arn:aws:ecs:us-east-1:012345678910:service/MyCluster/MyService',
       responseData: {
         ServiceName: 'MyService',
       },
@@ -106,23 +104,20 @@ describe('updateHandler', () => {
 
     ecsClientMock.on(UpdateServiceCommand, updateRequestParams).resolves({
       service: {
-        serviceArn:
-          'arn:aws:ecs:us-east-1:012345678910:service/MyCluster/MyService',
+        serviceArn: 'arn:aws:ecs:us-east-1:012345678910:service/MyCluster/MyService',
         serviceName: 'MyService',
       },
     });
 
     const untagRequestParams = {
-      resourceArn:
-        'arn:aws:ecs:us-east-1:012345678910:service/MyCluster/MyService',
+      resourceArn: 'arn:aws:ecs:us-east-1:012345678910:service/MyCluster/MyService',
       tagKeys: ['foo'],
     };
 
     ecsClientMock.on(UntagResourceCommand, untagRequestParams).resolves({});
 
     const tagRequestParams = {
-      resourceArn:
-        'arn:aws:ecs:us-east-1:012345678910:service/MyCluster/MyService',
+      resourceArn: 'arn:aws:ecs:us-east-1:012345678910:service/MyCluster/MyService',
       tags: [
         { key: 'dis', value: 'dat' },
         { key: 'k', value: 'west' },
@@ -155,7 +150,7 @@ describe('updateHandler', () => {
         },
       },
       defaultContext,
-      defaultLogger
+      defaultLogger,
     );
 
     const ecsClientCalls = ecsClientMock.calls();
@@ -174,15 +169,13 @@ describe('updateHandler', () => {
 
     ecsClientMock.on(UpdateServiceCommand, updateRequestParams).resolves({
       service: {
-        serviceArn:
-          'arn:aws:ecs:us-east-1:012345678910:service/MyCluster/MyService',
+        serviceArn: 'arn:aws:ecs:us-east-1:012345678910:service/MyCluster/MyService',
         serviceName: 'MyService',
       },
     });
 
     const tagRequestParams = {
-      resourceArn:
-        'arn:aws:ecs:us-east-1:012345678910:service/MyCluster/MyService',
+      resourceArn: 'arn:aws:ecs:us-east-1:012345678910:service/MyCluster/MyService',
       tags: [
         { key: 'dis', value: 'dat' },
         { key: 'k', value: 'west' },
@@ -215,7 +208,7 @@ describe('updateHandler', () => {
         },
       },
       defaultContext,
-      defaultLogger
+      defaultLogger,
     );
 
     const ecsClientCalls = ecsClientMock.calls();
@@ -234,8 +227,7 @@ describe('updateHandler', () => {
 
     ecsClientMock.on(UpdateServiceCommand, updateRequestParams).resolves({
       service: {
-        serviceArn:
-          'arn:aws:ecs:us-east-1:012345678910:service/MyCluster/MyService',
+        serviceArn: 'arn:aws:ecs:us-east-1:012345678910:service/MyCluster/MyService',
         serviceName: 'MyService',
       },
     });
@@ -255,7 +247,7 @@ describe('updateHandler', () => {
         },
       },
       defaultContext,
-      defaultLogger
+      defaultLogger,
     );
 
     const ecsClientCalls = ecsClientMock.calls();

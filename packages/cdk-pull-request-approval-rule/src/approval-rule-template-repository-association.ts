@@ -33,7 +33,10 @@ export class ApprovalRuleTemplateRepositoryAssociation extends Construct {
       policyStatements: [
         {
           Effect: 'Allow',
-          Action: ['codecommit:AssociateApprovalRuleTemplateWithRepository', 'codecommit:DisassociateApprovalRuleTemplateFromRepository'],
+          Action: [
+            'codecommit:AssociateApprovalRuleTemplateWithRepository',
+            'codecommit:DisassociateApprovalRuleTemplateFromRepository',
+          ],
           Resource: '*',
         },
       ],

@@ -1,6 +1,12 @@
 import * as path from 'path';
 import { RestApi, LambdaIntegration } from 'aws-cdk-lib/aws-apigateway';
-import { ActionCategory, CommonActionProps, IStage, ActionBindOptions, ActionConfig } from 'aws-cdk-lib/aws-codepipeline';
+import {
+  ActionCategory,
+  CommonActionProps,
+  IStage,
+  ActionBindOptions,
+  ActionConfig,
+} from 'aws-cdk-lib/aws-codepipeline';
 import { Action } from 'aws-cdk-lib/aws-codepipeline-actions';
 import { PolicyStatement } from 'aws-cdk-lib/aws-iam';
 import { Code, Function, Runtime } from 'aws-cdk-lib/aws-lambda';

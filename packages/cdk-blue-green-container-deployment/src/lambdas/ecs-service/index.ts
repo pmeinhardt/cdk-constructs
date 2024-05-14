@@ -10,8 +10,8 @@ import {
   UntagResourceCommand,
   UpdateServiceCommand,
   waitUntilServicesInactive,
-} from "@aws-sdk/client-ecs";
-import type { CloudFormationCustomResourceEvent } from "aws-lambda";
+} from '@aws-sdk/client-ecs';
+import type { CloudFormationCustomResourceEvent } from 'aws-lambda';
 import {
   customResourceHelper,
   OnCreateHandler,
@@ -19,7 +19,7 @@ import {
   OnDeleteHandler,
   ResourceHandler,
   ResourceHandlerReturn,
-} from "custom-resource-helper";
+} from 'custom-resource-helper';
 
 export interface Tag {
   Key: string;
@@ -47,9 +47,7 @@ export interface BlueGreenServiceProps {
 
 const ecs = new ECSClient();
 
-const getProperties = (
-  props: CloudFormationCustomResourceEvent["ResourceProperties"]
-): BlueGreenServiceProps => ({
+const getProperties = (props: CloudFormationCustomResourceEvent['ResourceProperties']): BlueGreenServiceProps => ({
   cluster: props.Cluster,
   serviceName: props.ServiceName,
   containerName: props.ContainerName,
@@ -68,9 +66,7 @@ const getProperties = (
   tags: props.Tags ?? [],
 });
 
-export const handleCreate: OnCreateHandler = async (
-  event
-): Promise<ResourceHandlerReturn> => {
+export const handleCreate: OnCreateHandler = async (event): Promise<ResourceHandlerReturn> => {
   const {
     cluster,
     serviceName,
@@ -101,7 +97,7 @@ export const handleCreate: OnCreateHandler = async (
       schedulingStrategy,
       propagateTags,
       deploymentController: {
-        type: "CODE_DEPLOY",
+        type: 'CODE_DEPLOY',
       },
       networkConfiguration: {
         awsvpcConfiguration: {
@@ -121,10 +117,10 @@ export const handleCreate: OnCreateHandler = async (
       tags: tags.map((t) => {
         return { key: t.Key, value: t.Value };
       }),
-    })
+    }),
   );
 
-  if (!service) throw Error("Service could not be created");
+  if (!service) throw Error('Service could not be created');
 
   return {
     physicalResourceId: service.serviceArn as string,
@@ -142,17 +138,9 @@ export const handleCreate: OnCreateHandler = async (
  * updated, a new AWS CodeDeploy deployment should be created.
  * For more information, see CreateDeployment in the AWS CodeDeploy API Reference.
  */
-export const handleUpdate: OnUpdateHandler = async (
-  event
-): Promise<ResourceHandlerReturn> => {
-  const {
-    cluster,
-    serviceName,
-    desiredCount,
-    deploymentConfiguration,
-    healthCheckGracePeriodSeconds,
-    tags,
-  } = getProperties(event.ResourceProperties);
+export const handleUpdate: OnUpdateHandler = async (event): Promise<ResourceHandlerReturn> => {
+  const { cluster, serviceName, desiredCount, deploymentConfiguration, healthCheckGracePeriodSeconds, tags } =
+    getProperties(event.ResourceProperties);
 
   const { service } = await ecs.send(
     new UpdateServiceCommand({
@@ -161,10 +149,10 @@ export const handleUpdate: OnUpdateHandler = async (
       desiredCount,
       deploymentConfiguration,
       healthCheckGracePeriodSeconds,
-    })
+    }),
   );
 
-  if (!service) throw Error("Service could not be updated");
+  if (!service) throw Error('Service could not be updated');
 
   const newTagKeys: string[] = tags.map((t: Tag) => t.Key);
   const removableTagKeys: string[] = (event.OldResourceProperties.Tags || [])
@@ -176,7 +164,7 @@ export const handleUpdate: OnUpdateHandler = async (
       new UntagResourceCommand({
         resourceArn: service.serviceArn as string,
         tagKeys: removableTagKeys,
-      })
+      }),
     );
   }
 
@@ -187,7 +175,7 @@ export const handleUpdate: OnUpdateHandler = async (
         tags: tags.map((t) => {
           return { key: t.Key, value: t.Value };
         }),
-      })
+      }),
     );
   }
 
@@ -207,7 +195,7 @@ const handleDelete: OnDeleteHandler = async (event): Promise<void> => {
       service: serviceName,
       cluster,
       force: true,
-    })
+    }),
   );
 
   /**
@@ -233,5 +221,5 @@ export const handler = customResourceHelper(
     onCreate: handleCreate,
     onUpdate: handleUpdate,
     onDelete: handleDelete,
-  })
+  }),
 );

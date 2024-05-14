@@ -24,16 +24,24 @@ export const processCodePipeline = async (event: CodePipelineCloudWatchEvent): P
     return;
   }
 
-  const pipelineState = await codePipeline.send(new GetPipelineStateCommand({
-    name: event.detail.pipeline,
-  }));
+  const pipelineState = await codePipeline.send(
+    new GetPipelineStateCommand({
+      name: event.detail.pipeline,
+    }),
+  );
 
-  const { pipelineExecution } = await codePipeline.send(new GetPipelineExecutionCommand({
-    pipelineName: event.detail.pipeline,
-    pipelineExecutionId: executionId,
-  }));
+  const { pipelineExecution } = await codePipeline.send(
+    new GetPipelineExecutionCommand({
+      pipelineName: event.detail.pipeline,
+      pipelineExecutionId: executionId,
+    }),
+  );
 
-  const notifierMessageBuilder = NotifierMessageBuilder.fromPipelineEventAndPipelineState(event, pipelineState, pipelineExecution);
+  const notifierMessageBuilder = NotifierMessageBuilder.fromPipelineEventAndPipelineState(
+    event,
+    pipelineState,
+    pipelineExecution,
+  );
 
   //  builder.updatePipelineEvent(event);
 

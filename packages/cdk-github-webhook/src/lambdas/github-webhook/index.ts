@@ -64,9 +64,10 @@ const handleUpdate: OnUpdateHandler = async (event): Promise<ResourceHandlerRetu
 };
 
 const handleDelete: OnDeleteHandler = async (event): Promise<void> => {
-  const { githubApiTokenString, githubRepoUrl } = camelizeKeys<WebhookProps, CloudFormationCustomResourceEventCommon['ResourceProperties']>(
-    event.ResourceProperties,
-  );
+  const { githubApiTokenString, githubRepoUrl } = camelizeKeys<
+    WebhookProps,
+    CloudFormationCustomResourceEventCommon['ResourceProperties']
+  >(event.ResourceProperties);
 
   const secretKey = new SecretKey(githubApiTokenString);
   const githubApiToken = await secretKey.getValue();

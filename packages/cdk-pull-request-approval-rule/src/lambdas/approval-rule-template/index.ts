@@ -41,7 +41,9 @@ export interface ApprovalRuleTemplateProps {
 const codecommit = new CodeCommitClient();
 
 const getProperties = (
-  props: CloudFormationCustomResourceEvent['ResourceProperties'] | CloudFormationCustomResourceUpdateEvent['OldResourceProperties'],
+  props:
+    | CloudFormationCustomResourceEvent['ResourceProperties']
+    | CloudFormationCustomResourceUpdateEvent['OldResourceProperties'],
 ): ApprovalRuleTemplateProps => ({
   approvalRuleTemplateName: props.ApprovalRuleTemplateName,
   approvalRuleTemplateDescription: props.ApprovalRuleTemplateDescription,
@@ -70,13 +72,19 @@ const buildTemplateContent = (template: Template): string => {
 };
 
 const onCreate = async (event: CloudFormationCustomResourceCreateEvent): Promise<HandlerReturn> => {
-  const { approvalRuleTemplateName, approvalRuleTemplateDescription = '', template } = getProperties(event.ResourceProperties);
-
-  const { approvalRuleTemplate } = await codecommit.send(new CreateApprovalRuleTemplateCommand({
+  const {
     approvalRuleTemplateName,
-    approvalRuleTemplateDescription,
-    approvalRuleTemplateContent: buildTemplateContent(template),
-  }));
+    approvalRuleTemplateDescription = '',
+    template,
+  } = getProperties(event.ResourceProperties);
+
+  const { approvalRuleTemplate } = await codecommit.send(
+    new CreateApprovalRuleTemplateCommand({
+      approvalRuleTemplateName,
+      approvalRuleTemplateDescription,
+      approvalRuleTemplateContent: buildTemplateContent(template),
+    }),
+  );
 
   return {
     PhysicalResourceId: approvalRuleTemplate?.approvalRuleTemplateId as string,
@@ -93,36 +101,44 @@ const onUpdate = async (event: CloudFormationCustomResourceUpdateEvent): Promise
   let approvalRuleTemplate: ApprovalRuleTemplate | undefined;
 
   if (buildTemplateContent(newProps.template) !== buildTemplateContent(oldProps.template)) {
-    const response = await codecommit.send(new UpdateApprovalRuleTemplateContentCommand({
-      approvalRuleTemplateName: oldProps.approvalRuleTemplateName,
-      newRuleContent: buildTemplateContent(newProps.template),
-    }));
+    const response = await codecommit.send(
+      new UpdateApprovalRuleTemplateContentCommand({
+        approvalRuleTemplateName: oldProps.approvalRuleTemplateName,
+        newRuleContent: buildTemplateContent(newProps.template),
+      }),
+    );
 
     approvalRuleTemplate = response.approvalRuleTemplate;
   }
 
   if (newProps.approvalRuleTemplateDescription !== oldProps.approvalRuleTemplateDescription) {
-    const response = await codecommit.send(new UpdateApprovalRuleTemplateDescriptionCommand({
-      approvalRuleTemplateName: oldProps.approvalRuleTemplateName,
-      approvalRuleTemplateDescription: newProps.approvalRuleTemplateDescription || '',
-    }));
+    const response = await codecommit.send(
+      new UpdateApprovalRuleTemplateDescriptionCommand({
+        approvalRuleTemplateName: oldProps.approvalRuleTemplateName,
+        approvalRuleTemplateDescription: newProps.approvalRuleTemplateDescription || '',
+      }),
+    );
 
     approvalRuleTemplate = response.approvalRuleTemplate;
   }
 
   if (newProps.approvalRuleTemplateName !== oldProps.approvalRuleTemplateName) {
-    const response = await codecommit.send(new UpdateApprovalRuleTemplateNameCommand({
-      newApprovalRuleTemplateName: newProps.approvalRuleTemplateName,
-      oldApprovalRuleTemplateName: oldProps.approvalRuleTemplateName,
-    }));
+    const response = await codecommit.send(
+      new UpdateApprovalRuleTemplateNameCommand({
+        newApprovalRuleTemplateName: newProps.approvalRuleTemplateName,
+        oldApprovalRuleTemplateName: oldProps.approvalRuleTemplateName,
+      }),
+    );
 
     approvalRuleTemplate = response.approvalRuleTemplate;
   }
 
   if (!approvalRuleTemplate) {
-    const response = await codecommit.send(new GetApprovalRuleTemplateCommand({
-      approvalRuleTemplateName: oldProps.approvalRuleTemplateName,
-    }));
+    const response = await codecommit.send(
+      new GetApprovalRuleTemplateCommand({
+        approvalRuleTemplateName: oldProps.approvalRuleTemplateName,
+      }),
+    );
 
     approvalRuleTemplate = response.approvalRuleTemplate;
   }
@@ -138,9 +154,11 @@ const onUpdate = async (event: CloudFormationCustomResourceUpdateEvent): Promise
 const onDelete = async (event: CloudFormationCustomResourceDeleteEvent): Promise<void> => {
   const { approvalRuleTemplateName } = getProperties(event.ResourceProperties);
 
-  await codecommit.send(new DeleteApprovalRuleTemplateCommand({
-    approvalRuleTemplateName,
-  }));
+  await codecommit.send(
+    new DeleteApprovalRuleTemplateCommand({
+      approvalRuleTemplateName,
+    }),
+  );
 };
 
 export const handler = async (event: CloudFormationCustomResourceEvent): Promise<HandlerReturn | void> => {

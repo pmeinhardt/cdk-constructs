@@ -13,10 +13,7 @@ import { mockClient } from 'aws-sdk-client-mock';
 
 const codeDeployClientMock = mockClient(CodeDeployClient);
 
-import {
-  handleCreate,
-  handleUpdate,
-} from '../../../lambdas/ecs-deployment-group';
+import { handleCreate, handleUpdate } from '../../../lambdas/ecs-deployment-group';
 import { defaultContext } from '../__fixtures__/default-context';
 import { defaultEvent } from '../__fixtures__/default-event';
 import { defaultLogger } from '../__fixtures__/default-logger';
@@ -32,10 +29,8 @@ const defaultEcsDeploymentGroupProperties = {
     },
   ],
   TargetGroupNames: ['Foo'],
-  ProdTrafficListenerArn:
-    'arn:aws:elasticloadbalancing::012345678910:listener/app/MyApp/foo/prod',
-  TestTrafficListenerArn:
-    'arn:aws:elasticloadbalancing::012345678910:listener/app/MyApp/foo/test',
+  ProdTrafficListenerArn: 'arn:aws:elasticloadbalancing::012345678910:listener/app/MyApp/foo/prod',
+  TestTrafficListenerArn: 'arn:aws:elasticloadbalancing::012345678910:listener/app/MyApp/foo/test',
   TerminationWaitTimeInMinutes: 5,
 };
 
@@ -58,14 +53,10 @@ describe('createHandler', () => {
       targetGroupPairInfoList: [
         {
           prodTrafficRoute: {
-            listenerArns: [
-              'arn:aws:elasticloadbalancing::012345678910:listener/app/MyApp/foo/prod',
-            ],
+            listenerArns: ['arn:aws:elasticloadbalancing::012345678910:listener/app/MyApp/foo/prod'],
           },
           testTrafficRoute: {
-            listenerArns: [
-              'arn:aws:elasticloadbalancing::012345678910:listener/app/MyApp/foo/test',
-            ],
+            listenerArns: ['arn:aws:elasticloadbalancing::012345678910:listener/app/MyApp/foo/test'],
           },
           targetGroups: [
             {
@@ -99,11 +90,9 @@ describe('createHandler', () => {
     ],
   };
 
-  codeDeployClientMock
-    .on(CreateDeploymentGroupCommand, requestParams)
-    .resolves({
-      deploymentGroupId: '1',
-    });
+  codeDeployClientMock.on(CreateDeploymentGroupCommand, requestParams).resolves({
+    deploymentGroupId: '1',
+  });
 
   test('sends tags with create request', async () => {
     await handleCreate(
@@ -120,7 +109,7 @@ describe('createHandler', () => {
         },
       },
       defaultContext,
-      defaultLogger
+      defaultLogger,
     );
 
     const codeDeployClientCalls = codeDeployClientMock.calls();
@@ -144,10 +133,9 @@ describe('createHandler', () => {
       },
       {
         ...defaultContext,
-        invokedFunctionArn:
-          'arn:aws:lambda:eu-west-1:012345678910:function:MyCustomResourceHandler',
+        invokedFunctionArn: 'arn:aws:lambda:eu-west-1:012345678910:function:MyCustomResourceHandler',
       },
-      defaultLogger
+      defaultLogger,
     );
 
     const codeDeployClientCalls = codeDeployClientMock.calls();
@@ -160,7 +148,7 @@ describe('createHandler', () => {
         responseData: {
           Arn: 'arn:aws:codedeploy:eu-west-1:012345678910:deploymentgroup:TestApplicationName/TestDeploymentGroupName',
         },
-      })
+      }),
     );
   });
 });
@@ -180,14 +168,10 @@ describe('updateHandler', () => {
       targetGroupPairInfoList: [
         {
           prodTrafficRoute: {
-            listenerArns: [
-              'arn:aws:elasticloadbalancing::012345678910:listener/app/MyApp/foo/prod',
-            ],
+            listenerArns: ['arn:aws:elasticloadbalancing::012345678910:listener/app/MyApp/foo/prod'],
           },
           testTrafficRoute: {
-            listenerArns: [
-              'arn:aws:elasticloadbalancing::012345678910:listener/app/MyApp/foo/test',
-            ],
+            listenerArns: ['arn:aws:elasticloadbalancing::012345678910:listener/app/MyApp/foo/test'],
           },
           targetGroups: [
             {
@@ -213,11 +197,9 @@ describe('updateHandler', () => {
     deploymentConfigName: 'CodeDeployDefault.ECSAllAtOnce',
   };
 
-  codeDeployClientMock
-    .on(UpdateDeploymentGroupCommand, requestParams)
-    .resolves({
-      hooksNotCleanedUp: [],
-    });
+  codeDeployClientMock.on(UpdateDeploymentGroupCommand, requestParams).resolves({
+    hooksNotCleanedUp: [],
+  });
 
   test('sends data update requests', async () => {
     const untagRequestParams = {
@@ -226,9 +208,7 @@ describe('updateHandler', () => {
       TagKeys: ['foo'],
     };
 
-    codeDeployClientMock
-      .on(UntagResourceCommand, untagRequestParams)
-      .resolves({});
+    codeDeployClientMock.on(UntagResourceCommand, untagRequestParams).resolves({});
 
     const tagRequestParams = {
       ResourceArn:
@@ -267,7 +247,7 @@ describe('updateHandler', () => {
         },
       },
       defaultContext,
-      defaultLogger
+      defaultLogger,
     );
 
     const codeDeployClientCalls = codeDeployClientMock.calls();
@@ -291,10 +271,9 @@ describe('updateHandler', () => {
       },
       {
         ...defaultContext,
-        invokedFunctionArn:
-          'arn:aws:lambda:us-east-1:012345678910:function:MyCustomResourceHandler',
+        invokedFunctionArn: 'arn:aws:lambda:us-east-1:012345678910:function:MyCustomResourceHandler',
       },
-      defaultLogger
+      defaultLogger,
     );
 
     expect(response).toEqual(
@@ -303,7 +282,7 @@ describe('updateHandler', () => {
         responseData: {
           Arn: 'arn:aws:codedeploy:us-east-1:012345678910:deploymentgroup:TestApplicationName/TestDeploymentGroupName',
         },
-      })
+      }),
     );
   });
 });

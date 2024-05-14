@@ -21,7 +21,12 @@ export const handler = async (event: CloudFrontRequestEvent): Promise<CloudFront
   try {
     const { requestedUri, nonce: currentNonce } = parseQueryString(request.querystring);
     redirectedFromUri += requestedUri || '';
-    const { idToken, accessToken, refreshToken, nonce: originalNonce } = extractAndParseCookies(request.headers, CONFIG.clientId);
+    const {
+      idToken,
+      accessToken,
+      refreshToken,
+      nonce: originalNonce,
+    } = extractAndParseCookies(request.headers, CONFIG.clientId);
 
     validateRefreshRequest(currentNonce, originalNonce, idToken, accessToken, refreshToken);
 
@@ -49,11 +54,12 @@ export const handler = async (event: CloudFrontRequestEvent): Promise<CloudFront
         refresh_token: refreshToken,
       });
 
-      const res = await httpPostWithRetry<{ id_token: string; access_token: string }>(cognitoTokenEndpoint, body, { headers }, CONFIG.logger).catch(
-        (err) => {
-          throw new Error(`Failed to refresh tokens: ${err}`);
-        },
-      );
+      const res = await httpPostWithRetry<{
+        id_token: string;
+        access_token: string;
+      }>(cognitoTokenEndpoint, body, { headers }, CONFIG.logger).catch((err) => {
+        throw new Error(`Failed to refresh tokens: ${err}`);
+      });
 
       tokens.id_token = res.data.id_token;
       tokens.access_token = res.data.access_token;

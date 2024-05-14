@@ -29,6 +29,17 @@
           "DOTNET_CORE_2"
         ]
       }
+    ],
+    "prettier/prettier": [
+      "error",
+      {
+        "bracketSameLine": true,
+        "printWidth": 120,
+        "semi": true,
+        "singleQuote": true,
+        "trailingComma": "all",
+        "tabWidth": 2
+      }
     ]
   }
 }

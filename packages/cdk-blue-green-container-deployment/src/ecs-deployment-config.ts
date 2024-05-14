@@ -32,8 +32,12 @@ export interface EcsDeploymentConfigurationProps {
 }
 
 export class EcsDeploymentConfig extends Resource implements IEcsDeploymentConfig {
-  public static readonly LINEAR_10PERCENT_EVERY_1MINUTE = deploymentConfig('CodeDeployDefault.ECSLinear10PercentEvery1Minutes');
-  public static readonly LINEAR_10PERCENT_EVERY_3MINUTES = deploymentConfig('CodeDeployDefault.ECSLinear10PercentEvery3Minutes');
+  public static readonly LINEAR_10PERCENT_EVERY_1MINUTE = deploymentConfig(
+    'CodeDeployDefault.ECSLinear10PercentEvery1Minutes',
+  );
+  public static readonly LINEAR_10PERCENT_EVERY_3MINUTES = deploymentConfig(
+    'CodeDeployDefault.ECSLinear10PercentEvery3Minutes',
+  );
   public static readonly CANARY_10PERCENT_5MINUTES = deploymentConfig('CodeDeployDefault.ECSCanary10Percent5Minutes');
   public static readonly CANARY_10PERCENT_15MINUTES = deploymentConfig('CodeDeployDefault.ECSCanary10Percent15Minutes');
   public static readonly ALL_AT_ONCE = deploymentConfig('CodeDeployDefault.ECSAllAtOnce');
@@ -46,7 +50,11 @@ export class EcsDeploymentConfig extends Resource implements IEcsDeploymentConfi
    * @param ecsDeploymentConfigName the name of the referenced custom Deployment Configuration
    * @returns a Construct representing a reference to an existing custom Deployment Configuration
    */
-  public static fromEcsDeploymentConfigName(_scope: Construct, _id: string, ecsDeploymentConfigName: string): IEcsDeploymentConfig {
+  public static fromEcsDeploymentConfigName(
+    _scope: Construct,
+    _id: string,
+    ecsDeploymentConfigName: string,
+  ): IEcsDeploymentConfig {
     return deploymentConfig(ecsDeploymentConfigName);
   }
 

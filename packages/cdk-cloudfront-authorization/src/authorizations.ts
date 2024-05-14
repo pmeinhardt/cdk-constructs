@@ -24,7 +24,10 @@ export interface IAuthorization {
   readonly redirectPaths: RedirectPaths;
   readonly signOutUrlPath: string;
   updateUserPoolClientCallbacks(redirects: UserPoolClientCallbackUrls): void;
-  createDefaultBehavior(origin: aws_cloudfront.IOrigin, options?: aws_cloudfront.AddBehaviorOptions): aws_cloudfront.BehaviorOptions;
+  createDefaultBehavior(
+    origin: aws_cloudfront.IOrigin,
+    options?: aws_cloudfront.AddBehaviorOptions,
+  ): aws_cloudfront.BehaviorOptions;
   createAdditionalBehaviors(
     origin: aws_cloudfront.IOrigin,
     options?: aws_cloudfront.AddBehaviorOptions,
@@ -78,9 +81,20 @@ export abstract class Authorization extends Construct {
           override: true,
         },
         contentTypeOptions: { override: true },
-        frameOptions: { frameOption: aws_cloudfront.HeadersFrameOption.DENY, override: true },
-        referrerPolicy: { referrerPolicy: aws_cloudfront.HeadersReferrerPolicy.SAME_ORIGIN, override: true },
-        strictTransportSecurity: { accessControlMaxAge: Duration.seconds(31536000), includeSubdomains: true, preload: true, override: true },
+        frameOptions: {
+          frameOption: aws_cloudfront.HeadersFrameOption.DENY,
+          override: true,
+        },
+        referrerPolicy: {
+          referrerPolicy: aws_cloudfront.HeadersReferrerPolicy.SAME_ORIGIN,
+          override: true,
+        },
+        strictTransportSecurity: {
+          accessControlMaxAge: Duration.seconds(31536000),
+          includeSubdomains: true,
+          preload: true,
+          override: true,
+        },
         xssProtection: { protection: true, modeBlock: true, override: true },
       },
       customHeadersBehavior: {
@@ -132,7 +146,10 @@ export abstract class Authorization extends Construct {
     });
   }
 
-  public createDefaultBehavior(origin: aws_cloudfront.IOrigin, options?: aws_cloudfront.AddBehaviorOptions): aws_cloudfront.BehaviorOptions {
+  public createDefaultBehavior(
+    origin: aws_cloudfront.IOrigin,
+    options?: aws_cloudfront.AddBehaviorOptions,
+  ): aws_cloudfront.BehaviorOptions {
     return {
       origin,
       compress: true,

@@ -14,9 +14,15 @@ function createPrereqResources(stack: cdk.Stack): {
   testListener: elb.ApplicationListener;
 } {
   const cluster = new ecs.Cluster(stack, 'Cluster');
-  const prodTargetGroup = new elb.ApplicationTargetGroup(stack, 'ProdTargetGroup', { vpc: cluster.vpc });
-  const testTargetGroup = new elb.ApplicationTargetGroup(stack, 'TestTargetGroup', { vpc: cluster.vpc });
-  const taskDefinition = new DummyTaskDefinition(stack, 'DummyTaskDefinition', { image: 'nginx' });
+  const prodTargetGroup = new elb.ApplicationTargetGroup(stack, 'ProdTargetGroup', {
+    vpc: cluster.vpc,
+  });
+  const testTargetGroup = new elb.ApplicationTargetGroup(stack, 'TestTargetGroup', {
+    vpc: cluster.vpc,
+  });
+  const taskDefinition = new DummyTaskDefinition(stack, 'DummyTaskDefinition', {
+    image: 'nginx',
+  });
   const service = new EcsService(stack, 'Service', {
     cluster,
     serviceName: 'My Service',

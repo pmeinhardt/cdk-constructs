@@ -34,9 +34,11 @@ export const handler = async (event: FilterEvent): Promise<void> => {
   };
 
   if (findingSeveriyCounts[severity]) {
-    await sns.send(new PublishCommand({
-      Message: JSON.stringify(alarmMessage),
-      TargetArn: alarmTopicArn,
-    }));
+    await sns.send(
+      new PublishCommand({
+        Message: JSON.stringify(alarmMessage),
+        TargetArn: alarmTopicArn,
+      }),
+    );
   }
 };

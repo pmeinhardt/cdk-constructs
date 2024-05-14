@@ -1,6 +1,6 @@
-import { GetFunctionCommand, LambdaClient, UpdateFunctionCodeCommand } from '@aws-sdk/client-lambda';
 import { mkdtempSync, writeFileSync } from 'fs';
 import { resolve } from 'path';
+import { GetFunctionCommand, LambdaClient, UpdateFunctionCodeCommand } from '@aws-sdk/client-lambda';
 import Zip from 'adm-zip';
 import type {
   CloudFormationCustomResourceCreateEvent,
@@ -8,7 +8,14 @@ import type {
   CloudFormationCustomResourceEventCommon,
 } from 'aws-lambda';
 import axios from 'axios';
-import { camelizeKeys, customResourceHelper, OnCreateHandler, OnUpdateHandler, ResourceHandler, ResourceHandlerReturn } from 'custom-resource-helper';
+import {
+  camelizeKeys,
+  customResourceHelper,
+  OnCreateHandler,
+  OnUpdateHandler,
+  ResourceHandler,
+  ResourceHandlerReturn,
+} from 'custom-resource-helper';
 
 interface WithConfiguration {
   region: string;
@@ -19,17 +26,20 @@ interface WithConfiguration {
 const updateLambdaCode = async (
   event: CloudFormationCustomResourceCreateEvent | CloudFormationCustomResourceUpdateEvent,
 ): Promise<ResourceHandlerReturn> => {
-  const { region, functionName, configuration } = camelizeKeys<WithConfiguration, CloudFormationCustomResourceEventCommon['ResourceProperties']>(
-    event.ResourceProperties,
-  );
+  const { region, functionName, configuration } = camelizeKeys<
+    WithConfiguration,
+    CloudFormationCustomResourceEventCommon['ResourceProperties']
+  >(event.ResourceProperties);
 
   const lambda = new LambdaClient({
     region,
   });
 
-  const { Code: code } = await lambda.send(new GetFunctionCommand({
-    FunctionName: functionName,
-  }));
+  const { Code: code } = await lambda.send(
+    new GetFunctionCommand({
+      FunctionName: functionName,
+    }),
+  );
 
   if (!code?.Location) {
     throw new Error(`The code of the lambda function ${functionName} could not be downloaded.`);
@@ -55,11 +65,13 @@ const updateLambdaCode = async (
     CodeSha256: codeSha256,
     Version: version,
     FunctionArn: functionArn,
-  } = await lambda.send(new UpdateFunctionCodeCommand({
-    FunctionName: functionName,
-    ZipFile: newLambdaZip.toBuffer(),
-    Publish: true,
-  }));
+  } = await lambda.send(
+    new UpdateFunctionCodeCommand({
+      FunctionName: functionName,
+      ZipFile: newLambdaZip.toBuffer(),
+      Publish: true,
+    }),
+  );
 
   return {
     physicalResourceId: functionName,

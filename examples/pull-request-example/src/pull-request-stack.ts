@@ -1,4 +1,7 @@
-import { ApprovalRuleTemplate, ApprovalRuleTemplateRepositoryAssociation } from '@cloudcomponents/cdk-pull-request-approval-rule';
+import {
+  ApprovalRuleTemplate,
+  ApprovalRuleTemplateRepositoryAssociation,
+} from '@cloudcomponents/cdk-pull-request-approval-rule';
 import { PullRequestCheck } from '@cloudcomponents/cdk-pull-request-check';
 import { Stack, StackProps } from 'aws-cdk-lib';
 import { BuildSpec } from 'aws-cdk-lib/aws-codebuild';

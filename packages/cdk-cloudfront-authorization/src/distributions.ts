@@ -197,12 +197,20 @@ export class BaseDistribution extends Construct implements aws_cloudfront.IDistr
 
     this.distribution = distribution;
 
-    const callbackUrls = props.domainNames?.map((name) => `https://${name}${props.authorization.redirectPaths.signIn}`) ?? [];
-    const logoutUrls = props.domainNames?.map((name) => `https://${name}${props.authorization.redirectPaths.signOut}`) ?? [];
+    const callbackUrls =
+      props.domainNames?.map((name) => `https://${name}${props.authorization.redirectPaths.signIn}`) ?? [];
+    const logoutUrls =
+      props.domainNames?.map((name) => `https://${name}${props.authorization.redirectPaths.signOut}`) ?? [];
 
     props.authorization.updateUserPoolClientCallbacks({
-      callbackUrls: [`https://${distribution.distributionDomainName}${props.authorization.redirectPaths.signIn}`, ...callbackUrls],
-      logoutUrls: [`https://${distribution.distributionDomainName}${props.authorization.redirectPaths.signOut}`, ...logoutUrls],
+      callbackUrls: [
+        `https://${distribution.distributionDomainName}${props.authorization.redirectPaths.signIn}`,
+        ...callbackUrls,
+      ],
+      logoutUrls: [
+        `https://${distribution.distributionDomainName}${props.authorization.redirectPaths.signOut}`,
+        ...logoutUrls,
+      ],
     });
 
     this.domainName = distribution.domainName;
@@ -227,19 +235,27 @@ export class BaseDistribution extends Construct implements aws_cloudfront.IDistr
   public applyRemovalPolicy(policy: RemovalPolicy) {
     const child = this.node.defaultChild as IConstruct;
     if (!child || !CfnResource.isCfnResource(child)) {
-      throw new Error('Cannot apply RemovalPolicy: no child or not a CfnResource. Apply the removal policy on the CfnResource directly.');
+      throw new Error(
+        'Cannot apply RemovalPolicy: no child or not a CfnResource. Apply the removal policy on the CfnResource directly.',
+      );
     }
     child.applyRemovalPolicy(policy);
   }
 
-  protected renderDefaultBehaviour(origin: aws_cloudfront.IOrigin, authorization: IAuthorization): aws_cloudfront.BehaviorOptions {
+  protected renderDefaultBehaviour(
+    origin: aws_cloudfront.IOrigin,
+    authorization: IAuthorization,
+  ): aws_cloudfront.BehaviorOptions {
     return authorization.createDefaultBehavior(origin, {
       originRequestPolicy: undefined,
       cachePolicy: aws_cloudfront.CachePolicy.CACHING_DISABLED,
     });
   }
 
-  protected renderAdditionalBehaviors(origin: aws_cloudfront.IOrigin, authorization: IAuthorization): Record<string, aws_cloudfront.BehaviorOptions> {
+  protected renderAdditionalBehaviors(
+    origin: aws_cloudfront.IOrigin,
+    authorization: IAuthorization,
+  ): Record<string, aws_cloudfront.BehaviorOptions> {
     return authorization.createAdditionalBehaviors(origin, {
       originRequestPolicy: undefined,
       cachePolicy: aws_cloudfront.CachePolicy.CACHING_DISABLED,

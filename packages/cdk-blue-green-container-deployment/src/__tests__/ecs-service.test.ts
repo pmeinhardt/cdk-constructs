@@ -12,9 +12,15 @@ describe('EcsService', () => {
   describe('with default props', () => {
     const stack = new cdk.Stack(app, 'MyStackWithDefaults');
     const cluster = new ecs.Cluster(stack, 'Cluster');
-    const prodTargetGroup = new elb.ApplicationTargetGroup(stack, 'ProdTargetGroup', { vpc: cluster.vpc });
-    const testTargetGroup = new elb.ApplicationTargetGroup(stack, 'TestTargetGroup', { vpc: cluster.vpc });
-    const taskDefinition = new DummyTaskDefinition(stack, 'DummyTaskDefinition', { image: 'nginx' });
+    const prodTargetGroup = new elb.ApplicationTargetGroup(stack, 'ProdTargetGroup', {
+      vpc: cluster.vpc,
+    });
+    const testTargetGroup = new elb.ApplicationTargetGroup(stack, 'TestTargetGroup', {
+      vpc: cluster.vpc,
+    });
+    const taskDefinition = new DummyTaskDefinition(stack, 'DummyTaskDefinition', {
+      image: 'nginx',
+    });
 
     new EcsService(stack, 'Service', {
       cluster,
@@ -37,9 +43,15 @@ describe('EcsService', () => {
   describe('with tag propagation', () => {
     const stack = new cdk.Stack(app, 'MyStackWithTagPropagation');
     const cluster = new ecs.Cluster(stack, 'Cluster');
-    const prodTargetGroup = new elb.ApplicationTargetGroup(stack, 'ProdTargetGroup', { vpc: cluster.vpc });
-    const testTargetGroup = new elb.ApplicationTargetGroup(stack, 'TestTargetGroup', { vpc: cluster.vpc });
-    const taskDefinition = new DummyTaskDefinition(stack, 'DummyTaskDefinition', { image: 'nginx' });
+    const prodTargetGroup = new elb.ApplicationTargetGroup(stack, 'ProdTargetGroup', {
+      vpc: cluster.vpc,
+    });
+    const testTargetGroup = new elb.ApplicationTargetGroup(stack, 'TestTargetGroup', {
+      vpc: cluster.vpc,
+    });
+    const taskDefinition = new DummyTaskDefinition(stack, 'DummyTaskDefinition', {
+      image: 'nginx',
+    });
 
     new EcsService(stack, 'Service', {
       cluster,
@@ -64,9 +76,15 @@ describe('EcsService', () => {
   describe('with tags', () => {
     const stack = new cdk.Stack(app, 'MyStackWithTags');
     const cluster = new ecs.Cluster(stack, 'Cluster');
-    const prodTargetGroup = new elb.ApplicationTargetGroup(stack, 'ProdTargetGroup', { vpc: cluster.vpc });
-    const testTargetGroup = new elb.ApplicationTargetGroup(stack, 'TestTargetGroup', { vpc: cluster.vpc });
-    const taskDefinition = new DummyTaskDefinition(stack, 'DummyTaskDefinition', { image: 'nginx' });
+    const prodTargetGroup = new elb.ApplicationTargetGroup(stack, 'ProdTargetGroup', {
+      vpc: cluster.vpc,
+    });
+    const testTargetGroup = new elb.ApplicationTargetGroup(stack, 'TestTargetGroup', {
+      vpc: cluster.vpc,
+    });
+    const taskDefinition = new DummyTaskDefinition(stack, 'DummyTaskDefinition', {
+      image: 'nginx',
+    });
 
     cdk.Tags.of(stack).add('Foo', 'Bar');
 

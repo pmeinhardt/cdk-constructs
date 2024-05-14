@@ -1,3 +1,4 @@
+import * as assert from 'assert';
 import { RemovalPolicy, aws_ec2, aws_ecs, aws_rds } from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 export interface DatabaseProps {
@@ -29,7 +30,8 @@ export class Database extends Construct {
           version: aws_rds.MariaDbEngineVersion.VER_10_5,
         }),
       allocatedStorage: props.allocatedStorage ?? 10,
-      instanceType: props.instanceType ?? aws_ec2.InstanceType.of(aws_ec2.InstanceClass.BURSTABLE3, aws_ec2.InstanceSize.MICRO),
+      instanceType:
+        props.instanceType ?? aws_ec2.InstanceType.of(aws_ec2.InstanceClass.BURSTABLE3, aws_ec2.InstanceSize.MICRO),
       deleteAutomatedBackups: props.removalPolicy === RemovalPolicy.DESTROY,
       removalPolicy: props.removalPolicy,
     });
@@ -38,13 +40,14 @@ export class Database extends Construct {
       WORDPRESS_DB_NAME: databaseName,
     };
 
+    assert(this.instance.secret);
+
     this.secrets = {
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      WORDPRESS_DB_HOST: aws_ecs.Secret.fromSecretsManager(this.instance.secret!, 'host'),
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      WORDPRESS_DB_USER: aws_ecs.Secret.fromSecretsManager(this.instance.secret!, 'username'),
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      WORDPRESS_DB_PASSWORD: aws_ecs.Secret.fromSecretsManager(this.instance.secret!, 'password'),
+      WORDPRESS_DB_HOST: aws_ecs.Secret.fromSecretsManager(this.instance.secret, 'host'),
+
+      WORDPRESS_DB_USER: aws_ecs.Secret.fromSecretsManager(this.instance.secret, 'username'),
+
+      WORDPRESS_DB_PASSWORD: aws_ecs.Secret.fromSecretsManager(this.instance.secret, 'password'),
     };
   }
 

@@ -24,9 +24,20 @@ export const DefaultSecurityHeadersBehavior: aws_cloudfront.ResponseSecurityHead
     override: true,
   },
   contentTypeOptions: { override: true },
-  frameOptions: { frameOption: aws_cloudfront.HeadersFrameOption.DENY, override: true },
-  referrerPolicy: { referrerPolicy: aws_cloudfront.HeadersReferrerPolicy.SAME_ORIGIN, override: true },
-  strictTransportSecurity: { accessControlMaxAge: Duration.seconds(31536000), includeSubdomains: true, preload: true, override: true },
+  frameOptions: {
+    frameOption: aws_cloudfront.HeadersFrameOption.DENY,
+    override: true,
+  },
+  referrerPolicy: {
+    referrerPolicy: aws_cloudfront.HeadersReferrerPolicy.SAME_ORIGIN,
+    override: true,
+  },
+  strictTransportSecurity: {
+    accessControlMaxAge: Duration.seconds(31536000),
+    includeSubdomains: true,
+    preload: true,
+    override: true,
+  },
   xssProtection: { protection: true, modeBlock: true, override: true },
 };
 
@@ -226,10 +237,15 @@ export class StaticWebsite extends Construct {
     super(scope, id);
 
     if (props.certificate) {
-      const certificateRegion = Stack.of(this).splitArn(props.certificate.certificateArn, ArnFormat.SLASH_RESOURCE_NAME).region;
+      const certificateRegion = Stack.of(this).splitArn(
+        props.certificate.certificateArn,
+        ArnFormat.SLASH_RESOURCE_NAME,
+      ).region;
 
       if (!Token.isUnresolved(certificateRegion) && certificateRegion !== 'us-east-1') {
-        throw new Error(`The certificate must be in the us-east-1 region and the certificate you provided is in ${certificateRegion}.`);
+        throw new Error(
+          `The certificate must be in the us-east-1 region and the certificate you provided is in ${certificateRegion}.`,
+        );
       }
     }
 
@@ -317,7 +333,11 @@ export class StaticWebsite extends Construct {
     }
   }
 
-  public addBehaviour(pathPattern: string, origin: aws_cloudfront.IOrigin, behaviorOptions?: aws_cloudfront.AddBehaviorOptions) {
+  public addBehaviour(
+    pathPattern: string,
+    origin: aws_cloudfront.IOrigin,
+    behaviorOptions?: aws_cloudfront.AddBehaviorOptions,
+  ) {
     this.distribution.addBehavior(pathPattern, origin, behaviorOptions);
   }
 
@@ -339,7 +359,10 @@ export class StaticWebsite extends Construct {
     });
   }
 
-  private createCertificate(hostedZone?: aws_route53.IHostedZone, domainNames?: string[]): aws_certificatemanager.ICertificate | undefined {
+  private createCertificate(
+    hostedZone?: aws_route53.IHostedZone,
+    domainNames?: string[],
+  ): aws_certificatemanager.ICertificate | undefined {
     if (!hostedZone || !domainNames || domainNames.length == 0) return;
 
     return new aws_certificatemanager.DnsValidatedCertificate(this, 'Certificate', {

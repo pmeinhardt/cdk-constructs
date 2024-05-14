@@ -93,7 +93,13 @@ export class FullRegionS3CodeCommitBackup extends Construct {
     this.backupProject.addToRolePolicy(
       new PolicyStatement({
         resources: ['*'],
-        actions: ['codecommit:BatchGet*', 'codecommit:Get*', 'codecommit:Describe*', 'codecommit:List*', 'codecommit:GitPull'],
+        actions: [
+          'codecommit:BatchGet*',
+          'codecommit:Get*',
+          'codecommit:Describe*',
+          'codecommit:List*',
+          'codecommit:GitPull',
+        ],
       }),
     );
 

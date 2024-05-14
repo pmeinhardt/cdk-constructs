@@ -21,7 +21,10 @@ export interface MessageCardFactoryOptions extends MessageOptions {
 }
 
 export class MessageCardFactory {
-  public static async createNotificationCard(snsMessage: SnsMessage, options: MessageCardFactoryOptions): Promise<MessageCard> {
+  public static async createNotificationCard(
+    snsMessage: SnsMessage,
+    options: MessageCardFactoryOptions,
+  ): Promise<MessageCard> {
     const { showRawMessages = false, ...messageOptions } = options;
 
     const message = (() => {

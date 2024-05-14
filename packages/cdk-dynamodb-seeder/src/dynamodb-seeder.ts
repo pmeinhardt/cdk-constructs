@@ -1,5 +1,12 @@
 import * as path from 'path';
-import { CustomResource, Duration, aws_iam as iam, aws_dynamodb as dynamodb, aws_lambda as lambda, aws_s3 as s3 } from 'aws-cdk-lib';
+import {
+  CustomResource,
+  Duration,
+  aws_iam as iam,
+  aws_dynamodb as dynamodb,
+  aws_lambda as lambda,
+  aws_s3 as s3,
+} from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 
 import { Seeds } from './seeds';
@@ -23,7 +30,9 @@ export class DynamoDBSeeder extends Construct {
     super(scope, id);
 
     const seeds = props.seeds.bind(this);
-    const seedsBucket = seeds.s3Location?.bucketName ? s3.Bucket.fromBucketName(this, 'SeedsBucket', seeds.s3Location.bucketName) : undefined;
+    const seedsBucket = seeds.s3Location?.bucketName
+      ? s3.Bucket.fromBucketName(this, 'SeedsBucket', seeds.s3Location.bucketName)
+      : undefined;
 
     const handler = new lambda.SingletonFunction(this, 'CustomResourceHandler', {
       uuid: 'Custom::DynamodbSeeder',
@@ -46,7 +55,14 @@ export class DynamoDBSeeder extends Construct {
       handler.addToRolePolicy(
         new iam.PolicyStatement({
           effect: iam.Effect.ALLOW,
-          actions: ['kms:Encrypt', 'kms:Decrypt', 'kms:ReEncrypt*', 'kms:GenerateDataKey*', 'kms:DescribeKey', 'kms:CreateGrant'],
+          actions: [
+            'kms:Encrypt',
+            'kms:Decrypt',
+            'kms:ReEncrypt*',
+            'kms:GenerateDataKey*',
+            'kms:DescribeKey',
+            'kms:CreateGrant',
+          ],
           resources: [props.table.encryptionKey.keyArn],
         }),
       );

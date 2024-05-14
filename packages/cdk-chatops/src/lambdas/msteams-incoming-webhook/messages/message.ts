@@ -9,7 +9,11 @@ export interface MessageOptions {
 }
 
 export abstract class Message {
-  constructor(protected readonly title: string, protected readonly snsMessage: SnsMessage, private readonly options: MessageOptions) {}
+  constructor(
+    protected readonly title: string,
+    protected readonly snsMessage: SnsMessage,
+    private readonly options: MessageOptions,
+  ) {}
 
   public async render(): Promise<MessageCard> {
     const { account: accountId, region } = this.snsMessage;

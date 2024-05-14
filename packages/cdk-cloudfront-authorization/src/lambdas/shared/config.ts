@@ -114,7 +114,8 @@ export const urlSafe = {
             use this on a string that was previously urlSafe.stringify'ed to return it to
             its prior pure-base64 form. Note that trailing = are not added, but NodeJS does not care
     */
-  stringify: (b64encodedString: string): string => b64encodedString.replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_'),
+  stringify: (b64encodedString: string): string =>
+    b64encodedString.replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_'),
   parse: (b64encodedString: string): string => b64encodedString.replace(/-/g, '+').replace(/_/g, '/'),
 };
 
